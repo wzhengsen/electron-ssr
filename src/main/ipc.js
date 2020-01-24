@@ -4,11 +4,10 @@ import downloadGitRepo from 'download-git-repo'
 import * as events from '../shared/events'
 import { appConfigPath, defaultSSRDownloadDir } from './bootstrap'
 import { updateAppConfig } from './data'
-import { hideWindow } from './window'
+import { hideWindow, sendData } from './window'
 import { importConfigFromClipboard } from './tray-handler'
 import defaultConfig, { mergeConfig } from '../shared/config'
 import { showNotification } from './notification'
-import { sendData } from './window'
 import { toggleMenu } from './menu'
 import logger from './logger'
 
@@ -36,7 +35,7 @@ ipcMain.on(events.EVENT_APP_HIDE_WINDOW, () => {
   }
 }).on(events.EVENT_RX_SYNC_RENDERER, (_, data) => {
   // 同步数据
-  logger.debug(`received sync data: ${data}`)
+  logger.debug(`received sync data: ${JSON.stringify(data, undefined, 4)}`)
   updateAppConfig(data, true)
 }).on(events.EVENT_SSR_DOWNLOAD_RENDERER, e => {
   // 下载ssr

@@ -8,6 +8,7 @@ import { EVENT_APP_NOTIFY_RENDERER } from '../shared/events'
  */
 export function showHtmlNotification (body, title = '通知') {
   console.log('using html5 notification')
+  // eslint-disable-next-line no-new
   new Notification(title, {
     body: body
   })

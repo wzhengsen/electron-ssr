@@ -3,14 +3,13 @@
  */
 import http from 'http'
 import httpShutdown from 'http-shutdown'
-import { parse } from 'url'
 import { dialog } from 'electron'
 import { readFile, writeFile, pathExists } from 'fs-extra'
 import logger from './logger'
 import { request } from '../shared/utils'
 import bootstrapPromise, { pacPath } from './bootstrap'
 import { currentConfig, appConfig$ } from './data'
-import { isHostPortValid } from './port'
+import { ensureHostPortValid } from './port'
 let pacContent
 let pacServer
 
@@ -26,7 +25,7 @@ export async function downloadPac (force = false) {
     logger.debug('start download pac')
     const pac = await request('https://raw.githubusercontent.com/shadowsocksrr/pac.txt/pac/pac.txt')
     pacContent = pac
-    return await writeFile(pacPath, pac)
+    return writeFile(pacPath, pac)
   }
 }
 
@@ -47,9 +46,10 @@ export async function serverPac (appConfig, isProxyStarted) {
   if (isProxyStarted) {
     const host = currentConfig.shareOverLan ? '0.0.0.0' : '127.0.0.1'
     const port = appConfig.pacPort !== undefined ? appConfig.pacPort : currentConfig.pacPort || 1240
-    isHostPortValid(host, port).then(() => {
-      pacServer = http.createServer((req, res) => {
-        if (parse(req.url).pathname === '/proxy.pac') {
+    try {
+      await ensureHostPortValid(host, port)
+      pacServer = http.createServer(async (req, res) => {
+        if ((req.url || '').startsWith('/proxy.pac')) {
           downloadPac().then(() => {
             return readPac()
           }).then(buffer => buffer.toString()).then(text => {
@@ -59,6 +59,8 @@ export async function serverPac (appConfig, isProxyStarted) {
             })
             res.write(text.replace(/__PROXY__/g, `SOCKS5 127.0.0.1:${appConfig.localPort}; SOCKS 127.0.0.1:${appConfig.localPort}; PROXY 127.0.0.1:${appConfig.localPort}; ${appConfig.httpProxyEnable ? 'PROXY 127.0.0.1:' + appConfig.httpProxyPort + ';' : ''} DIRECT`))
             res.end()
+          }).catch((error) => {
+            logger.error(error)
           })
         } else {
           res.writeHead(200)
@@ -72,13 +74,15 @@ export async function serverPac (appConfig, isProxyStarted) {
           logger.error(`pac server error: ${err}`)
           pacServer.shutdown()
         })
-    }).catch(() => {
+    } catch (err) {
+      logger.error('PAC Server Port Check failed, with error: ')
+      logger.error(err)
       dialog.showMessageBox({
         type: 'warning',
         title: '警告',
         message: `PAC端口 ${port} 被占用`
       })
-    })
+    }
   }
 }
 
@@ -91,7 +95,7 @@ export async function stopPacServer () {
       pacServer.shutdown(err => {
         if (err) {
           logger.warn(`close pac server error: ${err}`)
-          reject()
+          reject(new Error(`close pac server error: ${err}`))
         } else {
           logger.info('pac server closed.')
           resolve()

@@ -16,11 +16,12 @@ import logger from './logger'
 import { clearShortcuts } from './shortcut'
 import { loadConfigsFromString } from '../shared/ssr'
 import { isMac, isWin } from '../shared/env'
+import {
+  installVueDevtools
+} from 'vue-cli-plugin-electron-builder/lib'
 const isPrimaryInstance = app.requestSingleInstanceLock()
-
+const isDevelopment = process.env.NODE_ENV !== 'production' && !process.env.IS_TEST
 if (!isPrimaryInstance) {
-  // cannot find module '../dialog'
-  // https://github.com/electron/electron/issues/8862#issuecomment-294303518
   app.exit()
 } else {
   app.on('second-instance', (event, argv) => {
@@ -34,7 +35,11 @@ if (!isPrimaryInstance) {
     }
   })
 
-  bootstrap.then(() => {
+  bootstrap.then(async () => {
+    if (isDevelopment) {
+      console.log('Ensure Vue Devtools has been installed')
+      installVueDevtools()
+    }
     createWindow()
     if (isWin || isMac) {
       app.setAsDefaultProtocolClient('ssr')

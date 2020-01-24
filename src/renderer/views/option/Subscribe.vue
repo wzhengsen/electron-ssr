@@ -1,28 +1,28 @@
 <template>
   <div class="options-container px-2 pb-2 scroll-y">
     <div class="flex pb-1">
-      <i-button type="primary" class="w-6r" @click="onCreate">添加</i-button>
-      <i-button type="primary" class="w-6r ml-1" :disabled="selectedRows.length<1" @click="update">更新</i-button>
-      <i-button type="warning" class="w-6r ml-1" @click="remove" :disabled="selectedRows.length<1">删除</i-button>
+      <i-button type="primary" class="w-6r" @click="onCreate">{{$t('UI_ADD')}}</i-button>
+      <i-button type="primary" class="w-6r ml-1" :disabled="selectedRows.length<1" @click="update">{{$t('UI_UPDATE')}}</i-button>
+      <i-button type="warning" class="w-6r ml-1" @click="remove" :disabled="selectedRows.length<1">{{$t('UI_DELETE')}}</i-button>
       <div class="ml-auto flex-inline flex-ai-center">
         <i-input v-show="showNewUrl" class="mr-2 url-input" :class="{'input-error': urlError}"
-          v-model="url" placeholder="请输入合法的URL并回车" icon="plus" ref="input"
+          v-model="url" :placeholder="$t('UI_ENTER_VALID_URL')" icon="plus" ref="input"
           @keyup.enter.native="save" @keyup.esc.native="cancel" @on-blur="cancel"/>
-        <i-checkbox :value="appConfig.autoUpdateSubscribes" @on-change="onUpdateChange">自动更新</i-checkbox>
+        <i-checkbox :value="appConfig.autoUpdateSubscribes" @on-change="onUpdateChange">{{$t('UI_SETTING_UPDATE_AUTO')}}</i-checkbox>
         <div v-if="appConfig.autoUpdateSubscribes" class="flex-inline flex-ai-center cycle-wrapper">
-          <span>每&nbsp;</span>
+          <span>{{$t('UI_PER')}}&nbsp;</span>
           <i-input :value="cycle.number" :maxlength="2" number @input="onChangeCycleNumber"/>
           <i-select :value="cycle.unit" @input="onChangeCycleUnit">
-            <i-option value="hour">时</i-option>
-            <i-option value="day">天</i-option>
-            <i-option value="week">周</i-option>
+            <i-option value="hour">{{$t('UI_PER_HOUR')}}</i-option>
+            <i-option value="day">{{$t('UI_PER_DAY')}}</i-option>
+            <i-option value="week">{{$t('UI_PER_WEEK')}}</i-option>
           </i-select>
-          <span>&nbsp;更新</span>
+          <span>&nbsp;{{$t('UI_UPDATE')}}</span>
         </div>
       </div>
     </div>
     <i-table stripe border :columns="columns" :data="tableData" size="small"
-      :loading="loading" no-data-text="暂无订阅服务器" height="252"
+      :loading="loading" :no-data-text="$t('UI_NO_SUBS')" height="252"
       @on-selection-change="selectRows" @on-row-dblclick="onRowDBClick"></i-table>
   </div>
 </template>
@@ -46,73 +46,76 @@ export default {
       loading: false,
       columns: [
         { type: 'selection', width: 54, align: 'center' },
-        { title: '订阅地址', key: 'URL', render: (h, params) => {
-          const self = this
-          const isEditing = params.index === this.editingRowIndex
-          let element
-          if (isEditing) {
-            element = h('i-input', {
-              ref: 'url',
-              props: {
-                value: this.editingRowUrl,
-                placeholder: '请输入新的订阅服务器的URL'
-              },
-              attrs: {
-                id: 'editing-input'
-              },
-              on: {
-                'on-blur' () {
-                  self.cancelEditing()
-                }
-              },
-              nativeOn: {
-                keyup (e) {
-                  if (e.keyCode === 13) {
-                    const url = self.editingRowUrl
-                    // 未发生改变
-                    if (url === self.appConfig.serverSubscribes[params.index].URL) {
-                      self.cancelEditing()
-                      return
-                    }
-                    self.loading = true
-                    if (URL_REGEX.test(url)) {
-                      self.requestSubscribeUrl(url).then(res => {
-                        self.loading = false
-                        const [groupCount, groupConfigs] = isSubscribeContentValid(res)
-                        if (groupCount > 0) {
-                          const clone = self.appConfig.serverSubscribes.slice()
-                          clone.splice(params.index, 1)
-                          let groups = ''
-                          let configs = []
-                          for (const groupName in groupConfigs) {
-                            groups = groups + groupName + '|'
-                            configs = configs.concat(groupConfigs[groupName])
-                          }
-                          clone.splice(params.index, 0, { URL: url, Group: groups.slice(0, -1) })
-                          self.updateConfig({
-                            serverSubscribes: clone,
-                            configs: self.appConfig.configs.concat(configs)
-                          })
-                        }
-                      }).catch(() => {
-                        self.loading = false
-                      })
-                      self.cancelEditing()
-                    } else {
-                      self.editingUrlError = true
-                    }
-                  } else if (e.keyCode === 27) {
+        { title: this.$t('UI_SUBSCRIPTION_URL'),
+          key: 'URL',
+          render: (h, params) => {
+            const self = this
+            const isEditing = params.index === this.editingRowIndex
+            let element
+            if (isEditing) {
+              element = h('i-input', {
+                ref: 'url',
+                props: {
+                  value: this.editingRowUrl,
+                  placeholder: this.$t('UI_ENTER_NEW_SUB_URL')
+                },
+                attrs: {
+                  id: 'editing-input'
+                },
+                on: {
+                  'on-blur' () {
                     self.cancelEditing()
                   }
+                },
+                nativeOn: {
+                  keyup (e) {
+                    if (e.keyCode === 13) {
+                      const url = self.editingRowUrl
+                      // 未发生改变
+                      if (url === self.appConfig.serverSubscribes[params.index].URL) {
+                        self.cancelEditing()
+                        return
+                      }
+                      self.loading = true
+                      if (URL_REGEX.test(url)) {
+                        self.requestSubscribeUrl(url).then(res => {
+                          self.loading = false
+                          const [groupCount, groupConfigs] = isSubscribeContentValid(res)
+                          if (groupCount > 0) {
+                            const clone = self.appConfig.serverSubscribes.slice()
+                            clone.splice(params.index, 1)
+                            let groups = ''
+                            let configs = []
+                            for (const groupName in groupConfigs) {
+                              groups = groups + groupName + '|'
+                              configs = configs.concat(groupConfigs[groupName])
+                            }
+                            clone.splice(params.index, 0, { URL: url, Group: groups.slice(0, -1) })
+                            self.updateConfig({
+                              serverSubscribes: clone,
+                              configs: self.appConfig.configs.concat(configs)
+                            })
+                          }
+                        }).catch(() => {
+                          self.loading = false
+                        })
+                        self.cancelEditing()
+                      } else {
+                        self.editingUrlError = true
+                      }
+                    } else if (e.keyCode === 27) {
+                      self.cancelEditing()
+                    }
+                  }
                 }
-              }
-            })
-          } else {
-            element = params.row.URL
+              })
+            } else {
+              element = params.row.URL
+            }
+            return h('div', [element])
           }
-          return h('div', [element])
-        } },
-        { title: '组名', key: 'Group', width: 320 }
+        },
+        { title: this.$t('UI_GROUP_NAME'), key: 'Group', width: 320 }
       ],
       selectedRows: [],
       editingRowIndex: -1,

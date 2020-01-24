@@ -65,7 +65,7 @@ export default {
   methods: {
     ...mapActions(['updateConfig']),
     update: debounce(function (parent, field) {
-      this.updateConfig({ [parent]: { [field]: this.form[parent][field] }})
+      this.updateConfig({ [parent]: { [field]: this.form[parent][field] } })
     }, 1000),
     keydown: function (e) {
       e.preventDefault()

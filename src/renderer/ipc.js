@@ -46,6 +46,10 @@ ipcRenderer.on(events.EVENT_APP_NOTIFY_MAIN, (e, { title, body }) => {
   // 同步数据
   console.log('received sync data: %o', appConfig)
   store.commit('updateConfig', [appConfig])
+}).on(events.EVENT_CONFIG_CREATE, () => {
+  store.dispatch('newConfig')
+}).on(events.EVENT_SUBSCRIBE_NEW, () => {
+  store.dispatch('newSubscription')
 })
 
 /**

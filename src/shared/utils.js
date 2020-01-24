@@ -70,13 +70,10 @@ export function merge (to, ...origins) {
       const value = from[key]
       // Just merge existed property in origin data
       if (to[key] !== undefined) {
-        switch (protoString(value)) {
-          case OBJECT_PROTOTYPE:
-            merge(to[key], value)
-            break
-          default:
-            to[key] = value
-            break
+        if (protoString(value) === OBJECT_PROTOTYPE) {
+          merge(to[key], value)
+        } else {
+          to[key] = value
         }
       }
     }
@@ -123,20 +120,21 @@ export function configMerge (to, from, appendArray = false) {
 export function getUpdatedKeys (appConfig = {}, targetConfig) {
   return Object.keys(targetConfig).filter(key => {
     // 如果原对象类型和新的类型不一致直接返回true
-    if (protoString(appConfig[key]) !== protoString(value)) {
+    const value = targetConfig[key]
+    const oldValue = appConfig[key]
+    if (protoString(oldValue) !== protoString(value)) {
       return true
     }
-    const value = targetConfig[key]
     switch (protoString(value)) {
       case OBJECT_PROTOTYPE:
-        return getUpdatedKeys(appConfig[key], value).length
+        return getUpdatedKeys(oldValue, value).length
       case ARRAY_PROTOTYPE:
-        if (appConfig[key] === value) {
+        if (oldValue === value) {
           return false
         }
-        return appConfig[key].length !== value.length || appConfig[key].some((item, index) => getUpdatedKeys(item, value[index]).length > 0)
+        return oldValue.length !== value.length || oldValue.some((item, index) => getUpdatedKeys(item, value[index]).length > 0)
       default:
-        return appConfig[key] !== value
+        return oldValue !== value
     }
   })
 }
@@ -229,7 +227,7 @@ export function groupConfigs (configs, selectedIndex) {
     }
   })
   if (ungrouped.length) {
-    groups['未分组'] = ungrouped
+    groups['$ungrouped$'] = ungrouped
   }
   return groups
 }
@@ -251,7 +249,7 @@ export function somePromise (promiseArr) {
       p.then(resolve).catch(() => {
         count++
         if (count === promiseArr.length) {
-          reject()
+          reject(new Error('Error Occurred!'))
         }
       })
     }

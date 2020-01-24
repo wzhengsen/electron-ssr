@@ -55,40 +55,47 @@ function generateConfigSubmenus (configs, selectedIndex) {
 function generateMenus (appConfig) {
   const base = [
     { label: '主界面', click: handler.showManagePanel },
-    { label: '开启应用', type: 'checkbox', checked: appConfig.enable, click: () => {
-      handler.toggleEnable()
-      handler.toggleProxy(appConfig.sysProxyMode)
-    } },
-    { label: 'PAC', submenu: [
-      { label: '更新PAC', click: handler.updatePac }
-    ] },
+    { label: '开启应用',
+      type: 'checkbox',
+      checked: appConfig.enable,
+      click: () => {
+        handler.toggleEnable()
+        handler.toggleProxy(appConfig.sysProxyMode)
+      } },
+    { label: 'PAC',
+      submenu: [
+        { label: '更新PAC', click: handler.updatePac }
+      ] },
     { label: '服务器', submenu: generateConfigSubmenus(appConfig.configs, appConfig.index) },
     { label: '二维码扫描', click: handler.scanQRCode },
-    { label: '配置', submenu: [
-      { label: '选项设置...', click: handler.showOptions },
-      { label: '导入gui-config.json文件', click: handler.importConfigFromFile },
-      { label: '导出gui-config.json文件', click: handler.exportConfigToFile },
-      { label: '从剪贴板批量导入ssr://地址', click: handler.importConfigFromClipboard },
-      { label: '打开配置文件', click: handler.openConfigFile }
-    ] },
+    { label: '配置',
+      submenu: [
+        { label: '选项设置...', click: handler.showOptions },
+        { label: '导入gui-config.json文件', click: handler.importConfigFromFile },
+        { label: '导出gui-config.json文件', click: handler.exportConfigToFile },
+        { label: '从剪贴板批量导入ssr://地址', click: handler.importConfigFromClipboard },
+        { label: '打开配置文件', click: handler.openConfigFile }
+      ] },
     { label: '复制http代理设置', click: handler.copyHttpProxyCode },
-    { label: '帮助', submenu: [
-      { label: '检查更新', click: () => checkUpdate(true) },
-      { label: '查看日志', click: handler.openLog },
-      // { label: '项目主页', click: () => { handler.openURL('https://github.com/shadowsocksrr/electron-ssr') } },
-      // { label: 'Bug反馈', click: () => { handler.openURL('https://github.com/shadowsocksrr/electron-ssr/issues') } },
-      // { label: '捐赠', click: () => { handler.openURL('https://github.com/erguotou520/donate') } },
-      { label: '打开开发者工具', click: handler.openDevtool }
-    ] },
+    { label: '帮助',
+      submenu: [
+        { label: '检查更新', click: () => checkUpdate(true) },
+        { label: '查看日志', click: handler.openLog },
+        // { label: '项目主页', click: () => { handler.openURL('https://github.com/shadowsocksrr/electron-ssr') } },
+        // { label: 'Bug反馈', click: () => { handler.openURL('https://github.com/shadowsocksrr/electron-ssr/issues') } },
+        // { label: '捐赠', click: () => { handler.openURL('https://github.com/erguotou520/donate') } },
+        { label: '打开开发者工具', click: handler.openDevtool }
+      ] },
     { label: '退出', click: handler.exitApp }
   ]
   if (!isOldMacVersion) {
     base.splice(1, 0,
-      { label: '系统代理模式        ', submenu: [
-        { label: '不启用代理', type: 'checkbox', checked: appConfig.sysProxyMode === 0, click: e => changeProxy(e, 0, appConfig) },
-        { label: 'PAC代理', type: 'checkbox', checked: appConfig.sysProxyMode === 1, click: e => changeProxy(e, 1, appConfig) },
-        { label: '全局代理', type: 'checkbox', checked: appConfig.sysProxyMode === 2, click: e => changeProxy(e, 2, appConfig) }
-      ] }
+      { label: '系统代理模式        ',
+        submenu: [
+          { label: '不启用代理', type: 'checkbox', checked: appConfig.sysProxyMode === 0, click: e => changeProxy(e, 0, appConfig) },
+          { label: 'PAC代理', type: 'checkbox', checked: appConfig.sysProxyMode === 1, click: e => changeProxy(e, 1, appConfig) },
+          { label: '全局代理', type: 'checkbox', checked: appConfig.sysProxyMode === 2, click: e => changeProxy(e, 2, appConfig) }
+        ] }
     )
   }
   return base
@@ -120,10 +127,10 @@ function getTooltip (appConfig) {
   } else if (appConfig.sysProxyMode === 2) {
     arr.push('全局代理')
   }
-  const selectedConfig = appConfig.configs[appConfig.index]
-  if (selectedConfig) {
+  const activatedConfig = appConfig.configs[appConfig.index]
+  if (activatedConfig) {
     arr.push('\n')
-    arr.push(`${selectedConfig.group ? selectedConfig.group + ' - ' : ''}${selectedConfig.remarks || (selectedConfig.server + ':' + selectedConfig.server_port)}`)
+    arr.push(`${activatedConfig.group ? activatedConfig.group + ' - ' : ''}${activatedConfig.remarks || (activatedConfig.server + ':' + activatedConfig.server_port)}`)
   }
   return arr.join('')
 }

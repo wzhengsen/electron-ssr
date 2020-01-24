@@ -3,7 +3,7 @@ import { execFile } from 'child_process'
 // import treeKill from 'tree-kill'
 import { dialog } from 'electron'
 import { appConfig$ } from './data'
-import { isHostPortValid } from './port'
+import { ensureHostPortValid } from './port'
 import logger from './logger'
 import { isConfigEqual } from '../shared/utils'
 import { showNotification } from './notification'
@@ -19,7 +19,17 @@ export function runCommand (command, params) {
     logger.info('run command: %s', commandStr.replace(/-k [\d\w]* /, '-k ****** '))
     child = execFile(command, params)
     child.stdout.on('data', logger.info)
-    child.stderr.on('data', logger.error)
+    child.stderr.on('data', (error) => {
+      error.split('\n').forEach(msg => {
+        if (msg.indexOf('INFO') >= 0) {
+          logger.info(msg)
+        } else if (msg.indexOf('ERROR') >= 0) {
+          logger.error(msg)
+        } else if (msg.indexOf('WARNING') >= 0) {
+          logger.warn(msg)
+        }
+      })
+    })
   }
 }
 
@@ -34,49 +44,46 @@ export async function run (appConfig) {
   // 先结束之前的
   await stop()
   try {
-    await isHostPortValid(listenHost, appConfig.localPort || 1080)
+    await ensureHostPortValid(listenHost, appConfig.localPort || 1080)
+    const config = appConfig.configs[appConfig.index]
+    // 参数
+    const params = [path.join(appConfig.ssrPath, 'local.py')]
+    params.push('-s')
+    params.push(config.server)
+    params.push('-p')
+    params.push(config.server_port)
+    params.push('-k')
+    params.push(config.password)
+    params.push('-m')
+    params.push(config.method)
+    params.push('-O')
+    params.push(config.protocol)
+    if (config.protocolparam) {
+      params.push('-G')
+      params.push(config.protocolparam)
+    }
+    if (config.obfs) {
+      params.push('-o')
+      params.push(config.obfs)
+    }
+    if (config.obfsparam) {
+      params.push('-g')
+      params.push(config.obfsparam)
+    }
+    params.push('-b')
+    params.push(listenHost)
+    params.push('-l')
+    params.push(appConfig.localPort || 1080)
+    if (config.timeout) {
+      params.push('-t')
+      params.push(config.timeout)
+    }
+    runCommand('python', params)
   } catch (e) {
+    logger.error('SSR Client Port Check failed, with error: ')
     logger.error(e)
-    dialog.showMessageBox({
-      type: 'warning',
-      title: '警告',
-      message: `端口 ${appConfig.localPort} 被占用`
-    })
+    dialog.showErrorBox(`端口 ${appConfig.localPort} 被占用`, '请检查你端口占用')
   }
-  const config = appConfig.configs[appConfig.index]
-  // 参数
-  const params = [path.join(appConfig.ssrPath, 'local.py')]
-  params.push('-s')
-  params.push(config.server)
-  params.push('-p')
-  params.push(config.server_port)
-  params.push('-k')
-  params.push(config.password)
-  params.push('-m')
-  params.push(config.method)
-  params.push('-O')
-  params.push(config.protocol)
-  if (config.protocolparam) {
-    params.push('-G')
-    params.push(config.protocolparam)
-  }
-  if (config.obfs) {
-    params.push('-o')
-    params.push(config.obfs)
-  }
-  if (config.obfsparam) {
-    params.push('-g')
-    params.push(config.obfsparam)
-  }
-  params.push('-b')
-  params.push(listenHost)
-  params.push('-l')
-  params.push(appConfig.localPort || 1080)
-  if (config.timeout) {
-    params.push('-t')
-    params.push(config.timeout)
-  }
-  runCommand('python', params)
 }
 
 /**

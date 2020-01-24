@@ -1,24 +1,24 @@
 <template>
   <app-view name="panel" class="px-2 py-2" row>
-    <ssr-nodes></ssr-nodes>
-    <ssr-form v-show="!editingGroup.show" class="flex-1 mx-1"></ssr-form>
-    <ssr-group v-show="editingGroup.show&&editingGroup.title" class="flex-1 ml-1"></ssr-group>
-    <ssr-qrcode v-show="!editingGroup.show"></ssr-qrcode>
-    <div v-show="editingGroup.show&&!editingGroup.title" class="flex-1"></div>
+    <ssr-nodes ></ssr-nodes>
+    <info-panel></info-panel>
+    <!-- <div v-show="editingGroup.show&&!editingGroup.title" class="flex-1"></div> -->
   </app-view>
 </template>
 <script>
+/* eslint-disable vue/no-unused-components */
 import { mapState } from 'vuex'
 import SsrNodes from './panel/SSRNodes'
-import SsrForm from './panel/SSRForm'
-import SsrGroup from './panel/SSRGroup'
-import SsrQrcode from './panel/SSRQrcode'
+import InfoPanel from './panel/InfoPanel'
 export default {
   components: {
-    SsrNodes, SsrForm, SsrGroup, SsrQrcode
+    SsrNodes, InfoPanel
   },
   computed: {
     ...mapState(['editingGroup'])
   }
 }
 </script>
+<style >
+
+</style>

@@ -2,10 +2,8 @@ import { app, shell, clipboard } from 'electron'
 import { readJson, writeJson } from 'fs-extra'
 import { join } from 'path'
 import bootstrapPromise, { appConfigPath } from './bootstrap'
-import { logPath } from './logger'
+import logger, { logPath } from './logger'
 import { showWindow, sendData } from './window'
-export { openDevtool } from './window'
-export { updateSubscribes } from './subscribe'
 import { updateAppConfig, currentConfig } from './data'
 import { downloadPac } from './pac'
 import { startProxy } from './proxy'
@@ -13,6 +11,8 @@ import { showNotification } from './notification'
 import * as events from '../shared/events'
 import { loadConfigsFromString } from '../shared/ssr'
 import { chooseFile, chooseSavePath } from '../shared/dialog'
+export { openDevtool } from './window'
+export { updateSubscribes } from './subscribe'
 
 // 切换启用状态
 export function toggleEnable () {
@@ -34,8 +34,9 @@ export function switchConfig (index) {
 export function updatePac () {
   downloadPac(true).then(() => {
     showNotification('PAC文件更新成功')
-  }).catch(() => {
-    showNotification('PAC文件更新失败')
+  }).catch((error) => {
+    logger.error(error)
+    showNotification('PAC文件更新失败, 请检查你的网络和DNS')
   })
 }
 

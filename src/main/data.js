@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs/Observable'
-import { Subject } from 'rxjs/Subject'
-import 'rxjs/add/operator/multicast'
+import { Observable, Subject } from 'rxjs'
+
+import { multicast, refCount } from 'rxjs/operators'
 import { readJson, writeJson } from 'fs-extra'
 import bootstrap, { appConfigPath } from './bootstrap'
 import { sendData } from './window'
@@ -58,7 +58,7 @@ export function isProxyStarted (appConfig) {
  */
 export function updateAppConfig (targetConfig, fromRenderer = false, forceAppendArray = false) {
   const changedKeys = getUpdatedKeys(currentConfig, targetConfig)
-  // 只有有数据变更才更新配置
+  // // 只有有数据变更才更新配置
   if (changedKeys.length) {
     const oldConfig = clone(currentConfig, true)
     configMerge(currentConfig, targetConfig, forceAppendArray)
@@ -74,8 +74,7 @@ export function updateAppConfig (targetConfig, fromRenderer = false, forceAppend
 export function addConfigs (configs) {
   updateAppConfig({ configs: currentConfig.configs.concat(isArray(configs) ? configs : [configs]) }, false, true)
 }
-
-export const appConfig$ = source.multicast(subject).refCount()
+export const appConfig$ = source.pipe(multicast(subject), refCount())
 
 // 传参用于设定是退出应用还是关闭窗口 不传参表示返回当前状态
 export function isQuiting (target) {

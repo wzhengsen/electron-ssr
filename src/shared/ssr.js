@@ -9,7 +9,53 @@ export function decode (str) {
   return Base64.decode(str).toString('utf-8')
 }
 
-function merge (ssr, target) {
+export function getSSRLink (config) {
+  const required = [config.server, config.server_port, config.protocol,
+    config.method, config.obfs, encode(config.password)]
+  const others = []
+  config.obfsparam && others.push(`obfsparam=${encode(config.obfsparam)}`)
+  config.protocolparam && others.push(`protoparam=${encode(config.protocolparam)}`)
+  config.remarks && others.push(`remarks=${encode(config.remarks)}`)
+  config.group && others.push(`group=${encode(config.group)}`)
+  const link = `ssr://${encode(required.join(':') + '/?' + others.join('&'))}`
+  return link
+}
+export function isValidSSRConfig (config) {
+  return !!(config.server && config.server_port && config.password && config.method && config.protocol && config.obfs)
+}
+export function getSSLink (config) {
+  const link = `${config.method}:${config.password}@${config.server}:${config.server_port}`
+  const encoded = encode(link)
+  return `ss://${encoded}${config.remarks ? '#' + config.remarks : ''}`
+}
+export function fromSSRLink (link) {
+  let defaultConfig = defaultSSRConfig()
+  if (link) {
+    const [valid, requiredSplit, otherSplit] = isSSRLinkValid(link)
+    if (valid) {
+      defaultConfig.server = requiredSplit[0]
+      defaultConfig.server_port = +requiredSplit[1]
+      defaultConfig.protocol = requiredSplit[2]
+      defaultConfig.method = requiredSplit[3]
+      defaultConfig.obfs = requiredSplit[4]
+      defaultConfig.password = decode(requiredSplit[5])
+      if (otherSplit.obfsparam) {
+        defaultConfig.obfsparam = decode(otherSplit.obfsparam)
+      }
+      if (otherSplit.protoparam) {
+        defaultConfig.protocolparam = decode(otherSplit.protoparam)
+      }
+      if (otherSplit.remarks) {
+        defaultConfig.remarks = decode(otherSplit.remarks)
+      }
+      if (otherSplit.group) {
+        defaultConfig.group = decode(otherSplit.group)
+      }
+    }
+  }
+  return defaultConfig
+}
+function ssrMerge (ssr, target) {
   if (isObject(target)) {
     Object.keys(target).forEach(key => {
       if (ssr[key] !== undefined) {
@@ -18,95 +64,26 @@ function merge (ssr, target) {
     })
   }
 }
-
-export default class Config {
-  constructor (config) {
-    this.server = '127.0.0.1'
-    this.server_port = 8388
-    this.password = '0'
-    this.method = 'aes-256-cfb'
-    this.protocol = 'origin'
-    this.protocolparam = ''
-    this.obfs = 'plain'
-    this.obfsparam = ''
-    this.remarks = ''
-    this.group = ''
-    merge(this, config)
-    this.id = generateID()
-    this.enable = true
-    Object.defineProperty(this, 'remarks_base64', {
-      enumerable: true,
-      get () {
-        return this.remarks ? encode(this.remarks) : ''
-      },
-      set () {}
-    })
-  }
-
-  isValid () {
-    return !!(this.server && this.server_port && this.password && this.method && this.protocol && this.obfs)
-  }
-
-  getSSRLink () {
-    const required = [this.server, this.server_port, this.protocol, this.method, this.obfs, encode(this.password)]
-    const others = []
-    this.obfsparam && others.push(`obfsparam=${encode(this.obfsparam)}`)
-    this.protocolparam && others.push(`protoparam=${encode(this.protocolparam)}`)
-    this.remarks && others.push(`remarks=${encode(this.remarks)}`)
-    this.group && others.push(`group=${encode(this.group)}`)
-    const link = `ssr://${encode(required.join(':') + '/?' + others.join('&'))}`
-    return link
-  }
-
-  setSSRLink (link) {
-    if (link) {
-      const [valid, requiredSplit, otherSplit] = isSSRLinkValid(link)
-      if (valid) {
-        this.server = requiredSplit[0]
-        this.server_port = +requiredSplit[1]
-        this.protocol = requiredSplit[2]
-        this.method = requiredSplit[3]
-        this.obfs = requiredSplit[4]
-        this.password = decode(requiredSplit[5])
-        if (otherSplit.obfsparam) {
-          this.obfsparam = decode(otherSplit.obfsparam)
-        }
-        if (otherSplit.protoparam) {
-          this.protocolparam = decode(otherSplit.protoparam)
-        }
-        if (otherSplit.remarks) {
-          this.remarks = decode(otherSplit.remarks)
-        }
-        if (otherSplit.group) {
-          this.group = decode(otherSplit.group)
-        }
-      }
-    }
-    return this
-  }
-
-  getSSLink () {
-    const link = `${this.method}:${this.password}@${this.server}:${this.server_port}`
-    const encoded = encode(link)
-    return `ss://${encoded}${this.remarks ? '#' + this.remarks : ''}`
-  }
-
-  setSSLink (link) {
-    if (link) {
-      const [valid, split2, split3, remark] = isSSLinkValid(link)
-      if (valid) {
-        this.method = split2[0]
-        this.password = split2[1]
-        this.server = split3[0]
-        this.server_port = +split3[1]
-        if (remark) {
-          this.remarks = remark
-        }
-      }
-    }
-    return this
-  }
+// eslint-disable-next-line no-unused-vars
+export function defaultSSRConfig (config) {
+  let obj = {}
+  obj.server = '127.0.0.1'
+  obj.server_port = 8388
+  obj.password = '0'
+  obj.method = 'aes-256-cfb'
+  obj.protocol = 'origin'
+  obj.protocolparam = ''
+  obj.obfs = 'plain'
+  obj.obfsparam = ''
+  obj.remarks = ''
+  obj.group = ''
+  ssrMerge(obj, config)
+  obj.id = generateID()
+  obj.enable = true
+  return obj
 }
+// convert to plain object
+// TODO update unit test code
 
 // ssr://xxx 地址是否正确
 function isSSRLinkValid (link) {
@@ -171,11 +148,11 @@ export function loadConfigsFromString (strings) {
     arr.forEach(str => {
       if (/^ssr:\/\//.test(str)) {
         if (isSSRLinkValid(str)[0]) {
-          avaliable.push(new Config().setSSRLink(str))
+          avaliable.push(fromSSRLink(str))
         }
       } else if (/^ss:\/\//.test(str)) {
         if (isSSLinkValid(str)[0]) {
-          avaliable.push(new Config().setSSLink(str))
+          avaliable.push(fromSSRLink(str))
         }
       }
     })

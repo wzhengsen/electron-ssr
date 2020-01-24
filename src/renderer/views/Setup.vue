@@ -50,7 +50,7 @@ export default {
             if (isSSRPathAvaliable(value)) {
               callback()
             } else {
-              callback('该目录不正确，请重新选择')
+              callback(new Error('该目录不正确，请重新选择'))
             }
           } }
         ]

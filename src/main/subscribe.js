@@ -60,7 +60,7 @@ async function saveUpdateTime () {
   const date = new Date()
   lastUpdateTime = date
   logger.info('last update time: %s', lastUpdateTime)
-  return await writeFile(subscribeUpdateFile, date)
+  return writeFile(subscribeUpdateFile, date)
 }
 
 // 发起更新

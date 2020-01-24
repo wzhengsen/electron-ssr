@@ -2,7 +2,7 @@ import proxyServer from 'simple-web-proxy'
 import httpShutdown from 'http-shutdown'
 import { dialog } from 'electron'
 import { appConfig$ } from './data'
-import { isHostPortValid } from './port'
+import { ensureHostPortValid } from './port'
 import logger from './logger'
 
 let server
@@ -16,7 +16,7 @@ httpShutdown.extend()
 export function startHttpProxyServer (appConfig, isProxyStarted) {
   if (isProxyStarted && appConfig.httpProxyEnable) {
     const host = appConfig.shareOverLan ? '0.0.0.0' : '127.0.0.1'
-    isHostPortValid(host, appConfig.httpProxyPort).then(() => {
+    ensureHostPortValid(host, appConfig.httpProxyPort).then(() => {
       server = proxyServer({
         listenHost: host,
         listenPort: appConfig.httpProxyPort,
@@ -51,7 +51,7 @@ export async function stopHttpProxyServer () {
       server.shutdown(err => {
         if (err) {
           logger.warn(`close http proxy server error: ${err}`)
-          reject()
+          reject(new Error(`close http proxy server error: ${err}`))
         } else {
           logger.info('http proxy server closed.')
           resolve()
