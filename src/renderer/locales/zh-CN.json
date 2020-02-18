@@ -52,5 +52,24 @@
   "UI_NO_SUBS":"暂无订阅服务器",
   "UI_SUBSCRIPTION_URL":"订阅地址",
   "UI_ENTER_NEW_SUB_URL":"请输入新的订阅服务器的URL",
-  "UI_GROUP_NAME":"组名"
+  "UI_GROUP_NAME":"组名",
+  "UI_NO_NODE":"暂无节点，点击添加添加新节点",
+
+  "UI_FEATURE_CROSS_PLATFORM": "跨平台",
+  "UI_FEATURE_CP_DETAIL":"支持Windows、MacOs、Linux系统",
+  "UI_FEATURE_FULL_FEATURES": "功能齐全",
+  "UI_FEATURE_FF_DETAIL":"支持多种实用功能",
+  "UI_FEATURE_OPEN_SOURCE": "开源",
+  "UI_FEATURE_OS_DETAIL": "ssr和electron-ssr源代码均开放",
+  "UI_AUTO_DOWNLOAD_SSR":"自动下载SSR",
+  "UI_AUTO_DOWNLOAD_SSR_IF_CHECKED":"勾选上后将自动下载python ssr",
+  "UI_UNDERSTAND":"知道了!",
+  "UI_ELECTRON_SSR_NAME": "Electron SSR 客户端",
+  "UI_SELECT_MANAULLY": "手动选择",
+  "UI_LOCAL_PY_FILE_REQUIRED":"所选目录下需有local.py文件",
+  "UI_AUTO_DOWNLOAD":"自动下载",
+  "UI_CLICK_TO_RETRY":"点击重试",
+  "UI_PLEASE_SELECT_SS_FOLDER":"请选择shadowsocks目录",
+  "UI_INCORRECT_FOLDER":"该目录不正确，请重新选择",
+  "UI_DOWNLOADING_FOR_YOU":"正在为您下载"
 }

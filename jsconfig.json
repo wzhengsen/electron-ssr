@@ -2,10 +2,6 @@
     "compilerOptions": {
       "baseUrl": "./src",
       "paths": {
-        "@main/": ["./main/*"],
-        "@lib/": ["./lib/*"],
-        "@renderer/": ["./renderer/*"],
-        "@shared/": ["./shared/*"],
         "@/*": ["./*"]
       }
     }

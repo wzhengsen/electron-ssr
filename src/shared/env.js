@@ -1,6 +1,6 @@
 
 import os from 'os'
-import { execSync } from 'child_process'
+import { exec, execSync } from 'child_process'
 
 export const platform = os.platform()
 
@@ -9,10 +9,15 @@ export const isMac = platform === 'darwin'
 export const isLinux = platform === 'linux'
 
 // python 是否已安装
-export let isPythonInstalled
-try {
-  isPythonInstalled = /^hello$/.test(execSync(`python -c "print('hello')"`).toString().trim())
-} catch (e) {}
+export let isPythonInstalled = new Promise((resolve) => {
+  exec(`python -c "print('hello')"`, (err, stdout) => {
+    if (err) {
+      resolve(false)
+    } else {
+      resolve(/^hello$/.test(stdout.toString().trim()))
+    }
+  })
+})
 
 // mac版本号
 export let macVersion

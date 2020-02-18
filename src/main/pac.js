@@ -10,6 +10,8 @@ import { request } from '../shared/utils'
 import bootstrapPromise, { pacPath } from './bootstrap'
 import { currentConfig, appConfig$ } from './data'
 import { ensureHostPortValid } from './port'
+import * as i18n from './locales'
+const $t = i18n.default
 let pacContent
 let pacServer
 
@@ -38,7 +40,7 @@ function readPac () {
     }
   })
 }
-
+let ensurePacPromise = null
 /**
  * pac server
  */
@@ -50,7 +52,10 @@ export async function serverPac (appConfig, isProxyStarted) {
       await ensureHostPortValid(host, port)
       pacServer = http.createServer(async (req, res) => {
         if ((req.url || '').startsWith('/proxy.pac')) {
-          downloadPac().then(() => {
+          if (ensurePacPromise == null) {
+            ensurePacPromise = downloadPac()
+          }
+          ensurePacPromise.then(() => {
             return readPac()
           }).then(buffer => buffer.toString()).then(text => {
             res.writeHead(200, {
@@ -77,11 +82,7 @@ export async function serverPac (appConfig, isProxyStarted) {
     } catch (err) {
       logger.error('PAC Server Port Check failed, with error: ')
       logger.error(err)
-      dialog.showMessageBox({
-        type: 'warning',
-        title: '警告',
-        message: `PAC端口 ${port} 被占用`
-      })
+      dialog.showErrorBox($t('NOTI_PORT_TAKEN', { 'port': port }), $t('NOTI_CHECK_PORT'))
     }
   }
 }

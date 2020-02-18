@@ -1,13 +1,19 @@
 <template>
   <div class="panel-nodes flex flex-column h-100">
     <div class="node-group" ref="nodeGroup">
-      <node-group v-for="group in groupedNodes"
-                  :activatedConfigId="activatedConfigId"
-                  :selectedConfigId="selectedConfigId"
-                  :selectedGroupName="selectedConfigId || selectedGroupName"
-                  :key="group.id" :node="group"
-                  @nodeSelected="nodeSelected"
-                  @nodeActivated="nodeActivated"/>
+      <div class="wrapper" v-if="groupedNodes&&groupedNodes.length !== 0">
+        <node-group
+          v-for="group in groupedNodes"
+          :activatedConfigId="activatedConfigId"
+          :selectedConfigId="selectedConfigId"
+          :selectedGroupName="selectedConfigId || selectedGroupName"
+          :key="group.id"
+          :node="group"
+          @nodeSelected="nodeSelected"
+          @nodeActivated="nodeActivated"
+        />
+      </div>
+      <div class="empty-nodes" v-else>{{$t('UI_NO_NODE')}}</div>
     </div>
   </div>
 </template>
@@ -50,8 +56,8 @@ export default {
       })
     },
     activatedConfigId () {
-      if (this.configs.length > 0) {
-        return this.configs[this.appConfig.index].id || 0
+      if (this.appConfig.index >= 0 && this.configs.length > 0) {
+        return (this.configs[this.appConfig.index] && this.configs[this.appConfig.index].id) || ''
       }
       return ''
     },
@@ -70,8 +76,12 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(['updateEditingGroup',
-      'resetState', 'setSelectedConfigId', 'setSelectedGroupName']),
+    ...mapMutations([
+      'updateEditingGroup',
+      'resetState',
+      'setSelectedConfigId',
+      'setSelectedGroupName'
+    ]),
     ...mapActions(['updateConfigs', 'updateConfig', 'setSelected']),
 
     nodeSelected (data) {
@@ -86,7 +96,9 @@ export default {
       }
     },
     nodeActivated (id) {
-      this.updateConfig({ index: this.appConfig.configs.findIndex(config => config.id === id) })
+      this.updateConfig({
+        index: this.appConfig.configs.findIndex(config => config.id === id)
+      })
       this.resetState()
     }
     // flat分组
@@ -125,43 +137,59 @@ export default {
   },
   mounted () {
     // Auto scroll to selected(activated) node.
-    const selectedNode = this.$refs.nodeGroup.querySelector('.node-root.selected')
-    if (selectedNode) {
-      this.$refs.nodeGroup.scrollTop = selectedNode.offsetTop - 200
+    if (this.$refs.nodeGroup) {
+      const selectedNode = this.$refs.nodeGroup.querySelector(
+        '.node-root.selected'
+      )
+      if (selectedNode) {
+        this.$refs.nodeGroup.scrollTop = selectedNode.offsetTop - 200
+      }
     }
   }
 }
 </script>
 <style lang="stylus">
-  @import '../../assets/styles/variable';
-  .panel-nodes
-    width 25rem
+@import '../../assets/styles/variable';
 
-    .empty-tree
-      display flex
-      justify-content center
-      align-items center
+.panel-nodes {
+  width: 25rem;
 
-    .node-tree
-      border 1px solid $color-border
-      border-radius 4px
-      overflow-x hidden
-      overflow-y auto
+  .empty-tree {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-    .ivu-tree-children
-      .ivu-tree-children
-        .ivu-tree-arrow
-          display none
+  .node-tree {
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 
-    .node-group
-      border 1px solid #DCDFE6
-      border-radius 4px;
-      box-sizing border-box
-      // padding 8px 12px
-      padding-right 12px
-      padding-top 4px;
-      overflow scroll
-      overflow-x hidden
-      height 100%
+  .ivu-tree-children {
+    .ivu-tree-children {
+      .ivu-tree-arrow {
+        display: none;
+      }
+    }
+  }
 
+  .node-group {
+    border: 1px solid #DCDFE6;
+    border-radius: 4px;
+    box-sizing: border-box;
+    padding-right: 12px;
+    padding-top: 4px;
+    overflow: scroll;
+    overflow-x: hidden;
+    height: 100%;
+    width: 100%;
+    .empty-nodes{
+      width 100%;
+      text-align center;
+      margin-top 150px;
+    }
+  }
+}
 </style>

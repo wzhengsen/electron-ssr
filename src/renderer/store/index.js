@@ -13,7 +13,7 @@ import {
 import { defaultSSRConfig } from '@/shared/ssr'
 import { syncConfig } from '../ipc'
 import { STORE_KEY_FEATURE, STORE_KEY_SSR_METHODS, STORE_KEY_SSR_PROTOCOLS, STORE_KEY_SSR_OBFSES } from '../constants'
-
+import i18n from '@/renderer/i18n'
 Vue.use(Vuex)
 
 // 当前编辑的配置项
@@ -230,6 +230,9 @@ export default new Vuex.Store({
       if (initialSelected) {
         commit('setSelectedConfigId', initialSelected.id)
       }
+      if (config.lang) {
+        i18n.locale = config.lang
+      }
     },
     updateConfig ({ getters, commit }, targetConfig) {
       let index
@@ -345,8 +348,11 @@ export default new Vuex.Store({
       }
     },
     removeEditingGroup (context) {
-      const title = context.state.editingGroup.title
+      let title = context.state.editingGroup.title
       const clone = context.state.appConfig.configs.slice()
+      if (title === '$ungrouped$') {
+        title = ''
+      }
       context.dispatch('updateConfigs', clone.filter(config => config.group !== title))
       context.commit('setSelectedConfigId', (context.state.selectedConfig && context.state.selectedConfig.id) || '')
       context.commit('updateEditingGroup', { show: false, title: '' })
@@ -383,6 +389,11 @@ export default new Vuex.Store({
         return getters.configs.find(config => config.id === state.selection.selectedConfigId)
       }
       return defaultSSRConfig()
+    },
+    buttonState (state) {
+      let deleteEnabled = state.selection.selectedConfigId !== '' || (state.editingGroup && state.editingGroup.title && state.editingGroup.show)
+
+      return !deleteEnabled
     }
   }
 })

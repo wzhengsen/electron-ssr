@@ -18,11 +18,14 @@ const winImages = [
 switch (platform) {
   case 'darwin':
     extraFiles.push({ from: 'src/lib/proxy_conf_helper', to: './' })
-    files = files.concat(winImages)
+    files = files.concat(macImages)
     break
   case 'win32':
-    extraFiles.push({ from: 'src/lib/sysproxy.exe', to: './' })
-    files = files.concat(macImages)
+    extraFiles.push({ from: 'src/lib/sysproxy.exe', to: './3rdparty/sysproxy.exe' })
+    extraFiles.push({ from: 'src/lib/privoxy.exe', to: './3rdparty/privoxy.exe' })
+    extraFiles.push({ from: 'src/lib/mgwz.dll', to: './3rdparty/mgwz.dll' })
+    extraFiles.push({ from: 'src/lib/x64-libsodium.dll', to: './3rdparty/libsodium.dll' })
+    files = files.concat(winImages)
     break
   case 'linux':
     files = files.concat(macImages)
@@ -84,6 +87,15 @@ module.exports = {
           extendInfo: {
             LSUIElement: 'YES'
           }
+        },
+        win: {
+          icon: 'build/icons/icon.ico',
+          target: [
+            {
+              target: 'nsis',
+              arch: ['x64']
+            }
+          ]
         }
       }
     },
@@ -110,5 +122,8 @@ module.exports = {
       .end()
       .use('svg-to-vue-component')
       .loader('svg-to-vue-component/loader')
+  },
+  configureWebpack: {
+    devtool: 'source-map'
   }
 }

@@ -4,8 +4,8 @@
     <ssr-group v-show="inGroupNode" class="flex-1 ml-1"/>
     <ssr-qrcode v-show="displaySSR&&!inGroupNode"/>
     <div class="control-panel">
-      <i-button class="w-6r" type="error" @click="removeClick">{{$t('UI_DELETE')}}</i-button>
-      <i-button class="w-6r ml-3" type="primary" @click="save">{{$t('UI_SAVE')}}</i-button>
+      <i-button class="w-6r" type="error" @click="removeClick" :disabled="buttonState">{{$t('UI_DELETE')}}</i-button>
+      <i-button class="w-6r ml-3" type="primary" @click="save" :disabled="buttonState">{{$t('UI_SAVE')}}</i-button>
       <i-checkbox class="ml-3" v-model="displaySSR">{{$t('UI_DISPLAY_QRCODE')}}</i-checkbox>
     </div>
   </div>
@@ -32,7 +32,7 @@ export default {
   },
   computed: {
     ...mapState(['editingGroup', 'appConfig', 'editingConfig']),
-    ...mapGetters(['isEditingConfigUpdated', 'configs']),
+    ...mapGetters(['isEditingConfigUpdated', 'configs', 'buttonState']),
     inGroupNode () {
       return this.editingGroup && this.editingGroup.show && this.editingGroup.title
     }

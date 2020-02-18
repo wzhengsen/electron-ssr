@@ -2,7 +2,7 @@ import { Observable, Subject } from 'rxjs'
 
 import { multicast, refCount } from 'rxjs/operators'
 import { readJson, writeJson } from 'fs-extra'
-import bootstrap, { appConfigPath } from './bootstrap'
+import bootstrapPromise, { appConfigPath } from './bootstrap'
 import { sendData } from './window'
 import { EVENT_RX_SYNC_MAIN } from '../shared/events'
 import { isArray, getUpdatedKeys, configMerge, clone } from '../shared/utils'
@@ -27,7 +27,7 @@ async function read () {
 
 // 应用起步后初始化
 async function init () {
-  await bootstrap
+  await bootstrapPromise
   const stored = await read()
   mergeConfig(stored)
   return stored

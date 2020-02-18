@@ -2,89 +2,103 @@
  * 自动设置系统代理
  * linux目前仅支持gnome桌面的系统
  */
-import { execSync } from 'child_process'
-import { pathExistsSync } from 'fs-extra'
+import { exec } from 'child_process'
+import { pathExists } from 'fs-extra'
 import { winToolPath, macToolPath } from './bootstrap'
 import { currentConfig, appConfig$, updateAppConfig } from './data'
 import logger from './logger'
 import { isWin, isMac, isLinux, isOldMacVersion } from '../shared/env'
 
 // linux的gsettings命令是否可用
-let isGsettingsAvaliable = false
-try {
-  isGsettingsAvaliable = /gsettings$/.test(execSync('which gsettings').toString().trim())
-} catch (e) {}
+let isGsettingsAvaliable = new Promise((resolve) => {
+  exec('which gsettings', (err, stdout) => {
+    if (err) {
+      resolve(false)
+    } else {
+      resolve(/gsettings$/.test(stdout.toString().trim()))
+    }
+  })
+})
 let isProxyChanged = false
 
 /**
  * 运行命令
- * @param {String} command 待运行的命令
+ * @param {string} command 待运行的命令
+ * @returns {Promise<void>}
  */
 function runCommand (command) {
-  if (command) {
-    isProxyChanged = true
-    try {
-      execSync(command)
-    } catch (error) {
-      logger.error(error)
+  return new Promise((resolve) => {
+    if (command) {
+      isProxyChanged = true
+      try {
+        exec(command, () => {
+          resolve()
+        })
+      } catch (error) {
+        logger.error(error)
+        resolve()
+      }
+    } else {
+      resolve()
     }
-  }
+  })
 }
 
 /**
- * 设置代理为空, force表示强制设置，否则根据isProxyChanged字段判断是否需要设置为空
+ * 设置代理为空,否则根据isProxyChanged字段判断是否需要设置为空
+ * @param {boolean} force 强制设置
  */
-export function setProxyToNone (force = true) {
+export async function setProxyToNone (force = true) {
   if (force || isProxyChanged) {
     let command
-    if (isWin && pathExistsSync(winToolPath)) {
+    if (isWin && await pathExists(winToolPath)) {
       command = `${winToolPath} pac ""`
-    } else if (isMac && pathExistsSync(macToolPath) && !isOldMacVersion) {
+    } else if (isMac && await pathExists(macToolPath) && !isOldMacVersion) {
       command = `"${macToolPath}" -m off`
-    } else if (isLinux && isGsettingsAvaliable) {
+    } else if (isLinux && await isGsettingsAvaliable) {
       command = `gsettings set org.gnome.system.proxy mode 'none'`
     }
-    runCommand(command)
+    await runCommand(command)
   }
 }
 
 /**
  * 设置代理为全局
  */
-export function setProxyToGlobal (host, port) {
+export async function setProxyToGlobal (host, port) {
   let command
-  if (isWin && pathExistsSync(winToolPath)) {
+  if (isWin && await pathExists(winToolPath)) {
     command = `${winToolPath} global ${host}:${port}`
-  } else if (isMac && pathExistsSync(macToolPath) && !isOldMacVersion) {
+  } else if (isMac && await pathExists(macToolPath) && !isOldMacVersion) {
     command = `"${macToolPath}" -m global -p ${port}`
-  } else if (isLinux && isGsettingsAvaliable) {
+  } else if (isLinux && await isGsettingsAvaliable) {
     command = `gsettings set org.gnome.system.proxy mode 'manual' && gsettings set org.gnome.system.proxy.socks host '${host}' && gsettings set org.gnome.system.proxy.socks port ${port}`
   }
-  runCommand(command)
+  await runCommand(command)
 }
 
 /**
  * 设置代理为PAC代理
  */
-export function setProxyToPac (pacUrl) {
+export async function setProxyToPac (pacUrl) {
   let command
-  if (isWin && pathExistsSync(winToolPath)) {
+  if (isWin && await pathExists(winToolPath)) {
     command = `${winToolPath} pac ${pacUrl}`
-  } else if (isMac && pathExistsSync(macToolPath) && !isOldMacVersion) {
+  } else if (isMac && await pathExists(macToolPath) && !isOldMacVersion) {
     command = `"${macToolPath}" -m auto -u ${pacUrl}`
-  } else if (isLinux && isGsettingsAvaliable) {
+  } else if (isLinux && await isGsettingsAvaliable) {
     command = `gsettings set org.gnome.system.proxy mode 'auto' && gsettings set org.gnome.system.proxy autoconfig-url ${pacUrl}`
   }
-  runCommand(command)
+  await runCommand(command)
 }
 
-function setProxyByMode (mode) {
+async function setProxyByMode (mode) {
   if (mode === 0) {
-    setProxyToNone()
+    await setProxyToNone()
   } else if (mode === 1) {
-    setProxyToPac(`http://127.0.0.1:${currentConfig.pacPort}/proxy.pac`)
+    await setProxyToPac(`http://127.0.0.1:${currentConfig.pacPort}/proxy.pac`)
   } else if (mode === 2) {
-    setProxyToGlobal('127.0.0.1', currentConfig.localPort)
+    await setProxyToGlobal('127.0.0.1', currentConfig.localPort)
   }
 }
 

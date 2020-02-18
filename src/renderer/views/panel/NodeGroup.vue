@@ -63,6 +63,8 @@ export default {
 <style scoped>
 .ssr-node-group{
     padding-left: 4px;
+    width: 100%;
+    height: 100%;
 }
 .node-group-node{
     height: 32px;
@@ -73,18 +75,19 @@ export default {
 
 .group-expand-icon{
     display: inline-block;
-    padding-right: 8px;
+    padding-right: 4px;
     padding-left: 8px;
     transition: all 200ms;
     font-family: Ionicons,serif;
-    font-size: 12px;
+    font-size: 20px;
     color: #515151;
+    vertical-align: text-bottom;
 }
 .group-expand-icon.expanded{
     transform: rotate(90deg);
 }
 .group-expand-icon::before{
-    content: "\f125";
+    content: "\F341";
 }
 
 .group-children-area{

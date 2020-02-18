@@ -1,4 +1,4 @@
-import fs from 'fs'
+import { pathExists } from 'fs-extra'
 import path from 'path'
 import { net } from 'electron'
 import Base64 from 'urlsafe-base64'
@@ -234,12 +234,11 @@ export function groupConfigs (configs, selectedIndex) {
 
 /**
  * 判断选择的local.py的路径是否正确
- * @param {*String} path local.py所在的目录
+ * @param {string} folderPath local.py所在的目录
  */
 export function isSSRPathAvaliable (folderPath) {
   const localPyPath = path.join(folderPath, 'local.py')
-  console.log(localPyPath, fs.existsSync(localPyPath))
-  return fs.existsSync(localPyPath)
+  return pathExists(localPyPath)
 }
 
 export function somePromise (promiseArr) {

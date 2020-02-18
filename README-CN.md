@@ -57,8 +57,6 @@
 - `CommandOrControl+Shift+W` 切换主窗口显隐
 - `未设置` 切换系统代理
 
-### 应用内快捷键
-- `CommandOrControl+Shift+B` 切换是否显示操作菜单，仅Linux可用
 
 ## 已知Bug
 
@@ -89,21 +87,18 @@
 
 欢迎提出改修意见
 
-## 打赏
-
-[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/erguotou520)
 
 ## 开发和构建
-
+> 你可能需要在 `vue.config.js` 文件中修改输出格式
 ``` bash
 # or npm install
 yarn
 
 # 开发时
-npm run dev
+npm run electron:dev
 
 # 打包构建
-npm run build
+npm run electron:build
 
 # 单元测试
 npm run mocha

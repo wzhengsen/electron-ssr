@@ -17,29 +17,12 @@
           </i-col>
         </i-row>
       </i-form-item>
-      <i-form-item v-if="isLinux" class="flex-1">
-        <i-row type="flex" :gutter="24">
-          <i-col :span="5">
-            <i-checkbox v-model="form.windowShortcuts.toggleMenu.enable"
-              @on-change="update('windowShortcuts', 'toggleMenu')">
-              切换窗口菜单显隐
-            </i-checkbox>
-          </i-col>
-          <i-col :span="8">
-            <i-input v-model="form.windowShortcuts.toggleMenu.key"
-              readonly :disabled="!form.windowShortcuts.toggleMenu.enable"
-              @on-keydown="e=>keydown(e,'windowShortcuts', 'toggleMenu')"
-              @on-keyup="e=>keyup(e,'windowShortcuts', 'toggleMenu')"/>
-          </i-col>
-        </i-row>
-      </i-form-item>
     </i-form>
   </div>
 </template>
 <script>
 import { remote } from 'electron'
 import { mapActions } from 'vuex'
-import { changeBind } from '../../shortcut'
 import { debounce } from '../../../shared/utils'
 import { isLinux } from '../../../shared/env'
 
@@ -97,10 +80,6 @@ export default {
         if (parent === 'globalShortcuts') {
           if (globalShortcut.isRegistered(shortcutStr)) {
             return this.$message.error(`快捷键 ${shortcutStr} 已被注册，请更换`)
-          }
-        } else {
-          if (this.form[parent][field].key) {
-            changeBind(field, this.form[parent][field].key, shortcutStr)
           }
         }
         this.form[parent][field].key = shortcutStr

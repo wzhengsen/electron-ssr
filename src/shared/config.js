@@ -4,7 +4,7 @@ const defaultConfig = {
   // 配置集合
   configs: [],
   // 选中的配置
-  index: 0,
+  index: -1,
   // 是否启用
   enable: true,
   // 开机自启
@@ -22,7 +22,7 @@ const defaultConfig = {
   // 订阅列表
   serverSubscribes: [],
   // 是否开启http proxy
-  httpProxyEnable: true,
+  httpProxyEnable: false,
   // 全局快捷键
   globalShortcuts: {
     toggleWindow: {
@@ -34,19 +34,13 @@ const defaultConfig = {
       enable: false
     }
   },
-  // 窗口快捷键
-  windowShortcuts: {
-    toggleMenu: {
-      key: isLinux ? 'Ctrl+Shift+B' : '',
-      enable: isLinux
-    }
-  },
   // http proxy端口
   httpProxyPort: 12333,
   // 是否自动更新订阅服务器
   autoUpdateSubscribes: true,
   // 订阅服务器自动更新周期，单位：小时
-  subscribeUpdateInterval: 24
+  subscribeUpdateInterval: 24,
+  lang: 'en-US'
 }
 
 export default defaultConfig

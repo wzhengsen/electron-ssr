@@ -11,6 +11,7 @@ import Feature from './views/Feature'
 import Setup from './views/Setup'
 import Options from './views/Options'
 import ManagePanel from './views/ManagePanel'
+import 'iview/dist/styles/iview.css'
 export default {
   computed: {
     ...mapState(['appConfig', 'appMetaConfig', 'view'])
@@ -33,7 +34,6 @@ export default {
 }
 </script>
 <style lang="stylus">
-@import '~erguotou-iview/dist/styles/iview.css'
 @import './assets/styles'
 @import './assets/base.styl'
 </style>

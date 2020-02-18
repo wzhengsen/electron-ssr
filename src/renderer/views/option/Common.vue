@@ -2,38 +2,65 @@
   <div class="options-container px-2 pb-2 scroll-y">
     <i-form ref="form" class="mt-1" :model="form" :rules="rules" :label-width="120">
       <i-form-item prop="ssrPath" :label="$t('UI_SETTING_SSR_PYTHON_DIR')">
-        <i-input v-model="form.ssrPath" :placeholder="$t('UI_SETTING_SSR_INPUT_PLACEHOLDER')" @on-change="changeSSRPath" style="width:200px; margin-right:8px;"/>
+        <i-input
+          v-model="form.ssrPath"
+          :placeholder="$t('UI_SETTING_SSR_INPUT_PLACEHOLDER')"
+          @on-change="changeSSRPath"
+          style="width:200px; margin-right:8px;"
+        />
         <i-button type="primary" @click="selectPath">{{$t('UI_SETTING_SELECT_SSR_PYTHON_DIR')}}</i-button>
       </i-form-item>
       <div class="flex">
         <i-form-item class="flex-1" :label="$t('UI_SETTING_AUTO_START')">
-          <i-checkbox v-model="form.autoLaunch" @on-change="update('autoLaunch')"/>
+          <i-checkbox v-model="form.autoLaunch" @on-change="update('autoLaunch')" />
         </i-form-item>
         <i-form-item class="flex-1" :label="$t('UI_SETTING_SHARE_LAN')">
-          <i-checkbox v-model="form.shareOverLan" @on-change="update('shareOverLan')"/>
+          <i-checkbox v-model="form.shareOverLan" @on-change="update('shareOverLan')" />
         </i-form-item>
         <i-form-item class="flex-1" :label="$t('UI_SETTING_ENABLE_HTTP_PORT')">
-          <i-checkbox v-model="form.httpProxyEnable" @on-change="update('httpProxyEnable')"/>
+          <i-checkbox v-model="form.httpProxyEnable" @on-change="update('httpProxyEnable')" />
         </i-form-item>
       </div>
       <div class="flex">
         <i-form-item class="flex-1" :label="$t('UI_SETTING_PAC_PORT')">
-          <i-input-number v-model="form.pacPort" :min="0" :max="65535" @on-change="update('pacPort')"/>
+          <i-input-number
+            v-model="form.pacPort"
+            :min="0"
+            :max="65535"
+            @on-change="update('pacPort')"
+          />
         </i-form-item>
         <i-form-item class="flex-1" :label="$t('UI_SETTING_LOCAL_LISTEN_PORT')">
-          <i-input-number v-model="form.localPort" :min="0" :max="65535" @on-change="update('localPort')"/>
+          <i-input-number
+            v-model="form.localPort"
+            :min="0"
+            :max="65535"
+            @on-change="update('localPort')"
+          />
         </i-form-item>
         <i-form-item class="flex-1" :label="$t('UI_SETTING_HTTP_PORT')">
-          <i-input-number v-model="form.httpProxyPort" :min="0" :max="65535" @on-change="update('httpProxyPort')"/>
+          <i-input-number
+            v-model="form.httpProxyPort"
+            :min="0"
+            :max="65535"
+            @on-change="update('httpProxyPort')"
+          />
         </i-form-item>
       </div>
+      <i-form-item prop="lang" label="Language" :label-width="120">
+          <i-select v-model="form.lang" class="language-selector-view" @input="update('lang')">
+            <i-option value="zh-CN">简体中文</i-option>
+            <i-option value="en-US">English</i-option>
+          </i-select>
+      </i-form-item>
     </i-form>
   </div>
 </template>
 <script>
 import { mapActions } from 'vuex'
 import { isSSRPathAvaliable, debounce } from '../../../shared/utils'
-import { openDialog } from '../../ipc'
+import { openDialog } from '@/renderer/ipc'
+import i18n from '@/renderer/i18n'
 export default {
   data () {
     const appConfig = this.$store.state.appConfig
@@ -45,17 +72,21 @@ export default {
         localPort: appConfig.localPort,
         pacPort: appConfig.pacPort,
         httpProxyEnable: appConfig.httpProxyEnable,
-        httpProxyPort: appConfig.httpProxyPort
+        httpProxyPort: appConfig.httpProxyPort,
+        lang: appConfig.lang
       },
       rules: {
         ssrPath: [
-          { validator: (rule, value, callback) => {
-            if (isSSRPathAvaliable(value)) {
-              callback()
-            } else {
-              callback(new Error('该目录不正确，请重新选择'))
+          {
+            validator: (_, value) => {
+              return isSSRPathAvaliable(value).then(exists => {
+                if (exists) {
+                  return Promise.resolve()
+                }
+                return Promise.reject(new Error(this.$t('UI_INCORRECT_FOLDER')))
+              })
             }
-          } }
+          }
         ]
       }
     }
@@ -87,8 +118,8 @@ export default {
       })
     },
     // 选择目录
-    selectPath () {
-      const path = openDialog({
+    async selectPath () {
+      const path = await openDialog({
         properties: ['openDirectory']
       })
       if (path && path.length) {
@@ -103,8 +134,16 @@ export default {
     update: debounce(function (field) {
       if (this.form[field] !== this.$store.state.appConfig[field]) {
         this.updateConfig({ [field]: this.form[field] })
+        if (field === 'lang') {
+          i18n.locale = this.form[field]
+        }
       }
     }, 1000)
   }
 }
 </script>
+<style lang="stylus" scoped>
+.language-selector-view{
+  width 180px;
+}
+</style>

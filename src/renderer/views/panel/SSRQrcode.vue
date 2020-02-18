@@ -28,7 +28,7 @@
 <script>
 import { clipboard, nativeImage } from 'electron'
 import qr from 'qr-image'
-import clickoutside from 'erguotou-iview/src/directives/clickoutside'
+import clickoutside from 'iview/src/directives/clickoutside'
 import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
 import { getSSLink, getSSRLink } from '@/shared/ssr'
 import { merge } from '../../../shared/utils'
