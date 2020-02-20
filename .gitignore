@@ -133,3 +133,7 @@ typings/
 
 dist_electron
 .electron-vue-rm
+
+src/lib/*
+!src/lib/mac_service.sh
+!src/lib/proxy_conf_helper

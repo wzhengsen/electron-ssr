@@ -45,23 +45,31 @@ export const subscribeUpdateFile = path.join(appConfigDir, '.subscribe.update.la
 export const exePath = app.getPath('exe')
 // windows sysproxy.exe文件的路径
 let _winToolPath
-let _privoxyPath
+let _winKillPath
+let _s2hPath
 let _libsodiumDir
 if (isWin) {
   if (process.env.NODE_ENV === 'development') {
     _winToolPath = path.resolve(__dirname, '../src/lib/sysproxy.exe')
-    _privoxyPath = path.resolve(__dirname, '../src/lib/privoxy.exe')
+    _winKillPath = path.resolve(__dirname, '../src/lib/windows-kill.exe')
+    _s2hPath = path.resolve(__dirname, '../src/lib/socks2http.exe')
     _libsodiumDir = path.resolve(__dirname, '../src/lib/')
   } else {
     _winToolPath = path.join(path.dirname(exePath), './3rdparty/sysproxy.exe')
-    _privoxyPath = path.join(path.dirname(exePath), './3rdparty/privoxy.exe')
+    _winKillPath = path.join(path.dirname(exePath), './3rdparty/windows-kill.exe')
+    _s2hPath = path.join(path.dirname(exePath), './3rdparty/socks2http.exe')
     _libsodiumDir = path.join(path.dirname(exePath), './3rdparty')
   }
 } else if (isLinux || isMac) {
-  _privoxyPath = 'privoxy'
+  if (process.env.NODE_ENV === 'development') {
+    _s2hPath = path.resolve(__dirname, '../src/lib/socks2http')
+  } else {
+    _s2hPath = path.join(path.dirname(exePath), './3rdparty/socks2http')
+  }
 }
 export const winToolPath = _winToolPath
-export const privoxyPath = _privoxyPath
+export const winKillPath = _winKillPath
+export const s2hPath = _s2hPath
 // mac proxy_conf_helper工具目录
 export const macToolPath = path.resolve(appConfigDir, 'proxy_conf_helper')
 export const libsodiumDir = _libsodiumDir

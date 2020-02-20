@@ -55,4 +55,4 @@ install:
     fi
 
 script:
-  - yarn run electron:build
+  - yarn fetch-dep && yarn run electron:build

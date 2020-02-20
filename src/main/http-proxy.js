@@ -2,27 +2,16 @@
 import { dialog } from 'electron'
 import { appConfig$ } from './data'
 import { ensureHostPortValid } from './port'
-import { privoxyPath, privoxyCfgPath } from './bootstrap'
-import { spawn } from 'child_process'
+import { s2hPath, winKillPath } from './bootstrap'
+import { spawn, exec } from 'child_process'
 import logger from './logger'
-import * as fse from 'fs-extra'
 import * as i18n from './locales'
-import { isWin } from '@/shared/env'
 const $t = i18n.default
+let quitByCommand = false
 /**
  * @type {import('child_process').ChildProcess|null|undefined}
  */
-let privoxyInstance
-
-async function ensurePrivoxyCfg (ssrport, listenPort, shareOverLan) {
-  let config = []
-  config.push(`listen-address ${shareOverLan ? '0.0.0.0' : '127.0.0.1'}:${listenPort}`)
-  config.push('forward         192.168.*.*/     .')
-  config.push('forward         10.*.*.*/        .')
-  config.push('forward         127.*.*.*/       .')
-  config.push(`forward-socks5 / 127.0.0.1:${ssrport} .`)
-  await fse.writeFile(privoxyCfgPath, config.join('\n'))
-}
+let socks2httpInstance
 
 /**
  * 开启HTTP代理服务
@@ -33,25 +22,24 @@ async function startHttpProxyServer (appConfig, isProxyStarted) {
     const host = appConfig.shareOverLan ? '0.0.0.0' : '127.0.0.1'
     try {
       await ensureHostPortValid(host, appConfig.httpProxyPort)
-      await ensurePrivoxyCfg(appConfig.localPort, appConfig.httpProxyPort, appConfig.shareOverLan)
-      if (isWin) {
-        console.log(privoxyCfgPath)
-        privoxyInstance = spawn(privoxyPath, [privoxyCfgPath], {
-          windowsHide: true
-        })
-      } else {
-        privoxyInstance = spawn(privoxyPath, ['--no-daemon', privoxyCfgPath])
-      }
-      logger.debug(`privoxyInstance is running at pid: ${privoxyInstance.pid}`)
-      privoxyInstance.stderr.on('data', (info) => {
-        logger.info(`privoxy: ${info}`)
+      socks2httpInstance = spawn(s2hPath, ['-s', `127.0.0.1:${appConfig.localPort}`, '-l', `${host}:${appConfig.httpProxyPort}`], {
+        env: {
+          'RUST_LOG': 'info'
+        }
       })
-      privoxyInstance.stdout.on('data', (info) => {
-        logger.info(`privoxy: ${info}`)
+      quitByCommand = false
+      logger.debug(`s2h Instance is running at pid: ${socks2httpInstance.pid}`)
+      socks2httpInstance.stderr.on('data', (info) => {
+        logger.info(`s2h: ${info}`)
       })
-      privoxyInstance.on('exit', (code) => {
-        logger.info(`Privoxy quit with code: ${code}`)
-        privoxyInstance = null
+      socks2httpInstance.stdout.on('data', (info) => {
+        logger.info(`s2h: ${info}`)
+      })
+      socks2httpInstance.on('exit', (code, signal) => {
+        if (!quitByCommand) {
+          logger.info(`s2h quit unexpected with code/signal: ${code == null ? signal : code}`)
+          socks2httpInstance = null
+        }
       })
     } catch (error) {
       logger.info(error)
@@ -65,21 +53,27 @@ async function startHttpProxyServer (appConfig, isProxyStarted) {
  * @returns {Promise<void>}
  */
 export function stopHttpProxyServer () {
-  if (privoxyInstance && !privoxyInstance.killed) {
+  if (socks2httpInstance && !socks2httpInstance.killed) {
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
-        if (privoxyInstance && !privoxyInstance.killed) {
-          logger.warn('Privoxy can\'t be closed. Ignoring!')
+        if (socks2httpInstance && !socks2httpInstance.killed) {
+          logger.warn('s2h can\'t be closed. Ignoring!')
         }
         resolve()
       }, 3000)
-      privoxyInstance.on('exit', (code) => {
-        logger.info(`Privoxy exited with code ${code}`)
+      socks2httpInstance.on('exit', (code, signal) => {
+        logger.info(`s2h exited with code/signal: ${code == null ? signal : code}`)
         clearTimeout(timeout)
-        privoxyInstance = null
+        socks2httpInstance = null
         resolve()
       })
-      privoxyInstance.kill()
+      quitByCommand = true
+      if (process.platform === 'win32') {
+        logger.info('Killing Socks2Http')
+        exec([winKillPath, '-2', socks2httpInstance.pid].join(' '))
+      } else {
+        socks2httpInstance.kill('SIGINT')
+      }
     })
   }
   return Promise.resolve()

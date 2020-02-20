@@ -1,6 +1,6 @@
 import path from 'path'
-import { execFile } from 'child_process'
-import { libsodiumDir } from './bootstrap'
+import { execFile, exec } from 'child_process'
+import { libsodiumDir, winKillPath } from './bootstrap'
 import { dialog } from 'electron'
 import { appConfig$ } from './data'
 import { ensureHostPortValid } from './port'
@@ -11,6 +11,7 @@ import { toggleEnable } from './tray-handler'
 import * as i18n from './locales'
 import { isWin } from '@/shared/env'
 const $t = i18n.default
+let quitByCommand = false
 /**
  * @type {import('child_process').ChildProcess|null}
  */
@@ -58,8 +59,10 @@ function runPythonSSR (params) {
     })
   })
   pythonSSRInstance.once('exit', (code) => {
-    logger.debug(`Python SSR exit with code: ${code}`)
-    pythonSSRInstance = null
+    if (!quitByCommand) {
+      logger.debug(`Python SSR exit with code: ${code}`)
+      pythonSSRInstance = null
+    }
   })
 }
 
@@ -134,12 +137,16 @@ export function stop (force = false) {
       pythonSSRInstance.once('exit', (code) => {
         logger.debug(`Python SSR exit with code: ${code}`)
         pythonSSRInstance = null
-        if (timeout) {
-          clearTimeout(timeout)
-        }
+        clearTimeout(timeout)
         resolve()
       })
-      pythonSSRInstance.kill()
+      if (process.platform === 'win32') {
+        logger.info('Killing Python SSR')
+        exec([winKillPath, '-2', pythonSSRInstance.pid].join(' '))
+      } else {
+        pythonSSRInstance.kill('SIGINT')
+      }
+      quitByCommand = true
     })
   }
   return Promise.resolve()

@@ -5,12 +5,12 @@ const extraFiles = []
 let files = [
   '**/*'
 ]
-const macImages = [
+const winImages = [
   '!static/enabled@(Template|Highlight)?(@2x).png',
   '!static/pac@(Template|Highlight)?(@2x).png',
   '!static/global@(Template|Highlight)?(@2x).png'
 ]
-const winImages = [
+const macImages = [
   '!static/enabled?(@2x).png',
   '!static/pac?(@2x).png',
   '!static/global?(@2x).png'
@@ -18,17 +18,19 @@ const winImages = [
 switch (platform) {
   case 'darwin':
     extraFiles.push({ from: 'src/lib/proxy_conf_helper', to: './' })
+    extraFiles.push({ from: 'src/lib/socks2http', to: './3rdparty/socks2http' })
     files = files.concat(macImages)
     break
   case 'win32':
     extraFiles.push({ from: 'src/lib/sysproxy.exe', to: './3rdparty/sysproxy.exe' })
-    extraFiles.push({ from: 'src/lib/privoxy.exe', to: './3rdparty/privoxy.exe' })
-    extraFiles.push({ from: 'src/lib/mgwz.dll', to: './3rdparty/mgwz.dll' })
-    extraFiles.push({ from: 'src/lib/x64-libsodium.dll', to: './3rdparty/libsodium.dll' })
+    extraFiles.push({ from: 'src/lib/windows-kill.exe', to: './3rdparty/windows-kill.exe' })
+    extraFiles.push({ from: 'src/lib/socks2http.exe', to: './3rdparty/socks2http.exe' })
+    extraFiles.push({ from: 'src/lib/libsodium.dll', to: './3rdparty/libsodium.dll' })
     files = files.concat(winImages)
     break
   case 'linux':
-    files = files.concat(macImages)
+    files = files.concat(winImages)
+    extraFiles.push({ from: 'src/lib/socks2http', to: './3rdparty/socks2http' })
 }
 module.exports = {
   pluginOptions: {
@@ -96,6 +98,12 @@ module.exports = {
               arch: ['x64']
             }
           ]
+        },
+        pacman: {
+          depends: ['dconf', 'libsodium', 'openssl']
+        },
+        rpm: {
+          depends: ['libsodium', 'openssl', 'dconf']
         }
       }
     },

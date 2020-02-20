@@ -12,7 +12,8 @@
     "electron:serve": "vue-cli-service electron:serve",
     "i18n:report": "vue-cli-service i18n:report --src './src/**/*.?(js|vue)' --locales './src/locales/**/*.json'",
     "postinstall": "electron-builder install-app-deps",
-    "postuninstall": "electron-builder install-app-deps"
+    "postuninstall": "electron-builder install-app-deps",
+    "fetch-dep": "node scripts/fetch_deps.js"
   },
   "main": "background.js",
   "dependencies": {
@@ -44,9 +45,11 @@
     "electron": "^6.0.0",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
+    "socks5-https-client": "^1.2.1",
     "stylus": "^0.54.7",
     "stylus-loader": "^3.0.2",
     "svg-to-vue-component": "^0.3.8",
+    "unzipper": "^0.10.8",
     "vue-cli-plugin-electron-builder": "^1.4.4",
     "vue-cli-plugin-i18n": "^0.6.1",
     "vue-template-compiler": "^2.6.10"
