@@ -48,7 +48,7 @@ if (!isPrimaryInstance) {
 
     // 开机自启动配置
     const AutoLauncher = new AutoLaunch({
-      name: 'ShadowsocksR Client',
+      name: 'Electron SSR',
       isHidden: true,
       mac: {
         useLaunchAgent: true

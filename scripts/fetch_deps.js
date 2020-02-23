@@ -5,11 +5,14 @@ const fs = require('fs')
 const { ensureDir, copy, readdir } = require('fs-extra')
 const { exec } = require('child_process')
 const unzipper = require('unzipper')
+const chalk = require('chalk')
+const cliProgress = require('cli-progress')
 const Socks5ClientHttpsAgent = require('socks5-https-client/lib/Agent')
 const tmpDir = path.join(os.tmpdir(), 'electron-ssr-deps-fetch')
 const copyDir = path.join(process.cwd(), 'src', 'lib')
 console.log(`tmpDir: ${tmpDir}`)
 console.log(`copyDir: ${copyDir}`)
+
 function fetchIndex (url) {
   return new Promise((resolve, reject) => {
     console.log(`Start Fetching: ${url}`)
@@ -119,21 +122,49 @@ async function getWindowsKill () {
   await extractFile(downloadPath)
   await copy(path.join(tmpDir, folderName, 'windows-kill.exe'), path.join(copyDir, 'windows-kill.exe'))
 }
+/**
+ *
+ * @param {string} url
+ * @param {string} path
+ */
 function downloadFile (url, path) {
   return new Promise((resolve, reject) => {
+    let useMirror = process.argv.indexOf('-m') >= 0
+    // let isDebug = process.argv.indexOf('-d') >= 0
+    if (useMirror) {
+      const mirrorHost = 'http://github-mirror.bugkiller.org'
+      console.log(chalk.red(`Using github-mirror from ${mirrorHost}, it may not be safe.`))
+      url = url.replace('https://github.com', mirrorHost)
+    }
     console.log(`Start Downloading: ${url}`)
     const file = fs.createWriteStream(path)
     let option = {
       url: url,
       header: {
-        'User-Agent': 'request'
+        'User-Agent': 'electron-ssr'
       }
     }
-    withProxy(option)
-    withGHToken(option)
-    request(option).on('error', reject).pipe(file)
+    if (!useMirror) {
+      withProxy(option)
+      withGHToken(option)
+    }
+    let req = request(option)
+    const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+    req.on('error', (error) => {
+      reject(error)
+      bar.stop()
+    })
+    req.on('response', (resp) => {
+      bar.start(parseInt(resp.headers['content-length'], 10), 0)
+    })
+    req.pipe(file)
+    let sum = 0
+    req.on('data', (chunk) => {
+      sum += chunk.length
+      bar.update(sum)
+    })
     file.on('close', () => {
-      console.log('WRITE DONE!')
+      bar.stop()
       resolve()
     })
   })

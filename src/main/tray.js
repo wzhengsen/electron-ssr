@@ -2,9 +2,10 @@ import { Menu, nativeImage, Tray } from 'electron'
 import { appConfig$ } from './data'
 import * as handler from './tray-handler'
 import { groupConfigs } from '../shared/utils'
-import { isMac, isOldMacVersion, isWin } from '../shared/env'
+import { isMac, isWin, isOldMacVersion } from '../shared/env'
 import { disabledTray, enabledHighlightTray, enabledTray, globalHighlightTray, globalTray, pacHighlightTray, pacTray } from '../shared/icon'
 import * as i18n from './locales'
+import bootstrap from './bootstrap'
 const $t = i18n.default
 let tray
 
@@ -52,47 +53,65 @@ function generateConfigSubmenus (configs, selectedIndex) {
  * 根据应用配置生成菜单
  * @param {Object} appConfig 应用配置
  */
-function generateMenus (appConfig) {
+async function generateMenus (appConfig) {
   i18n.setLocal(appConfig.lang || 'en-US')
+  let menuHelp = {
+    label: $t('MENU_HELP'),
+    submenu: [
+      { label: $t('MENU_SUB_DEVS_INSPECT_LOG'), click: handler.openLog }
+    ]
+  }
   const base = [
     { label: $t('TRAY_MAIN_PAGE'), click: handler.showManagePanel },
-    { label: $t('MENU_SUB_ENABLE_APP'),
+    {
+      label: $t('MENU_SUB_ENABLE_APP'),
       type: 'checkbox',
       checked: appConfig.enable,
       click: () => {
         handler.toggleEnable()
         handler.toggleProxy(appConfig.sysProxyMode)
-      } },
-    { label: $t('MENU_PAC'),
+      }
+    },
+    {
+      label: $t('MENU_PAC'),
       submenu: [
         { label: $t('MENU_SUB_UPDATE_PAC'), click: handler.updatePac }
-      ] },
+      ]
+    },
     { label: $t('TRAY_SERVERS'), submenu: generateConfigSubmenus(appConfig.configs, appConfig.index) },
     { label: $t('MENU_SUB_ADD_FROM_QR_SCAN'), click: handler.scanQRCode },
-    { label: $t('MENU_SETTINGS'),
+    {
+      label: $t('MENU_SETTINGS'),
       submenu: [
         { label: $t('MENU_SUB_SETTING_OPTIONS'), click: handler.showOptions },
         { label: $t('MENU_SUB_LOAD_CF'), click: handler.importConfigFromFile },
         { label: $t('MENU_SUB_EXPORT_CF'), click: handler.exportConfigToFile },
         { label: $t('MENU_SUB_ADD_FROM_CB'), click: handler.importConfigFromClipboard },
         { label: $t('MENU_SUB_OPEN_CF'), click: handler.openConfigFile }
-      ] },
+      ]
+    },
     { label: $t('MENU_SUB_CHECK_UPDATE'), click: handler.copyHttpProxyCode },
-    { label: $t('MENU_HELP'),
-      submenu: [
-        { label: $t('MENU_SUB_DEVS_INSPECT_LOG'), click: handler.openLog }
-      ] },
+    menuHelp,
     { role: 'quit' }
   ]
-  if (!isOldMacVersion) {
+  let macToolPathExist = appConfig['isMacToolInstalled']
+  if (!isMac || (!await isOldMacVersion && macToolPathExist)) {
     base.splice(1, 0,
-      { label: $t('MENU_SYS_PROXY_MODE'),
+      {
+        label: $t('MENU_SYS_PROXY_MODE'),
         submenu: [
           { label: $t('MENU_SUB_NO_PROXY'), type: 'checkbox', checked: appConfig.sysProxyMode === 0, click: e => changeProxy(e, 0, appConfig) },
           { label: $t('MENU_SUB_PAC_PROXY'), type: 'checkbox', checked: appConfig.sysProxyMode === 1, click: e => changeProxy(e, 1, appConfig) },
           { label: $t('MENU_SUB_GLOBAL_PROXY'), type: 'checkbox', checked: appConfig.sysProxyMode === 2, click: e => changeProxy(e, 2, appConfig) }
-        ] }
+        ]
+      }
     )
+  }
+  if (!await isOldMacVersion && isMac) {
+    menuHelp.submenu.push({
+      label: 'Install Help Tool',
+      click: handler.installMacHelpToolTray
+    })
   }
   return base
 }
@@ -135,8 +154,8 @@ function getTooltip (appConfig) {
  * 更新任务栏菜单
  * @param {Object} appConfig 应用配置
  */
-function updateTray (appConfig) {
-  const menus = generateMenus(appConfig)
+async function updateTray (appConfig) {
+  const menus = await generateMenus(appConfig)
   const contextMenu = Menu.buildFromTemplate(menus)
   tray.setContextMenu(contextMenu)
   tray.setToolTip(getTooltip(appConfig))
@@ -164,7 +183,8 @@ function setTrayIcon (appConfig) {
 /**
  * 渲染托盘图标和托盘菜单
  */
-export default function renderTray (appConfig) {
+async function renderTray (appConfig) {
+  await bootstrap
   // 生成tray
   tray = new Tray(nativeImage.createEmpty())
   updateTray(appConfig)
@@ -187,7 +207,7 @@ appConfig$.subscribe(data => {
   if (!changed.length) {
     renderTray(appConfig)
   } else {
-    if (['configs', 'index', 'enable', 'sysProxyMode'].some(key => changed.indexOf(key) > -1)) {
+    if (['configs', 'index', 'enable', 'sysProxyMode', 'isMacToolInstalled'].some(key => changed.indexOf(key) > -1)) {
       updateTray(appConfig)
     }
     if (['enable', 'sysProxyMode'].some(key => changed.indexOf(key) > -1)) {

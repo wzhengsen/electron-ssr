@@ -1,6 +1,6 @@
 
 import os from 'os'
-import { exec, execSync } from 'child_process'
+import { exec } from 'child_process'
 
 export const platform = os.platform()
 
@@ -20,27 +20,28 @@ export let isPythonInstalled = new Promise((resolve) => {
 })
 
 // mac版本号
-export let macVersion
+let macVersion = null
 // mac版本是否低于10.11
-export let isOldMacVersion = false
-if (isMac) {
-  try {
-    const result = execSync('sw_vers').toString()
-    macVersion = result.match(/ProductVersion:[ \t]*([\d.]*)/)[1]
-    const matchedVersion = [10, 11, 0]
-    const splited = macVersion.split('.')
-    for (let i = 0; i < splited.length; i++) {
-      if (splited[i] > matchedVersion[i]) {
-        isOldMacVersion = false
-        break
-      } else if (splited[i] < matchedVersion[i]) {
-        isOldMacVersion = true
-        break
-      } else if (i === 2 && splited[i] === matchedVersion[i]) {
-        isOldMacVersion = true
+export let isOldMacVersion = new Promise((resolve) => {
+  if (isMac) {
+    exec('sw_vers', (err, stdout) => {
+      if (err) {
+        resolve(false)
+      } else {
+        macVersion = stdout.match(/ProductVersion:[ \t]*([\d.]*)/)[1]
+        const matchedVersion = [10, 11, 0]
+        const splited = macVersion.split('.')
+        for (let i = 0; i < splited.length; i++) {
+          if (splited[i] > matchedVersion[i]) {
+            resolve(false)
+          } else if (splited[i] < matchedVersion[i]) {
+            resolve(true)
+          } else if (i === 2 && splited[i] === matchedVersion[i]) {
+            resolve(true)
+          }
+        }
       }
-    }
-  } catch (error) {
-    // do nothing
+    })
   }
-}
+  resolve(false)
+})

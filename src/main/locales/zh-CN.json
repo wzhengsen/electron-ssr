@@ -41,6 +41,7 @@
     "NOTI_CHECK_PORT":"请检查你端口占用",
     "NOTI_PROCESS_CANT_KILL":"进程 {pid} 可能无法关闭，尝试手动关闭",
     "NOTI_PYTHON_MISSING_TITLE": "未检测到python",
-    "NOTI_PYTHON_MISSING_DETAIL": "本程序所使用的后端为python版ssr/ssrr\n请确保已安装python且可正常使用，否则软件可能无法正常运行"
-
+    "NOTI_PYTHON_MISSING_DETAIL": "本程序所使用的后端为python版ssr/ssrr\n请确保已安装python且可正常使用，否则软件可能无法正常运行",
+    "NOTI_PAC_UPDATE_SUCC":"PAC文件更新成功",
+    "NOTI_PAC_UPDATE_FAILED":"PAC文件更新失败, 请检查你的网络和DNS"
 }

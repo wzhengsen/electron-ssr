@@ -20,5 +20,5 @@ export default function $t (key, format = null) {
     }
     return raw
   }
-  return dict[key]
+  return dict[key] || key
 }

@@ -27,3 +27,4 @@ build_script:
 
 test: off
 
+skip_tags: true

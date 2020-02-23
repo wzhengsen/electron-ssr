@@ -4,15 +4,15 @@
 import http from 'http'
 import httpShutdown from 'http-shutdown'
 import { dialog } from 'electron'
-import { readFile, writeFile, pathExists } from 'fs-extra'
+import { readFile, writeFile, pathExists, createReadStream } from 'fs-extra'
 import logger from './logger'
 import { request } from '../shared/utils'
-import bootstrapPromise, { pacPath } from './bootstrap'
+import bootstrapPromise, { pacPath, pacRawPath } from './bootstrap'
+import { showNotification } from './notification'
 import { currentConfig, appConfig$ } from './data'
 import { ensureHostPortValid } from './port'
 import * as i18n from './locales'
 const $t = i18n.default
-let pacContent
 let pacServer
 
 httpShutdown.extend()
@@ -22,25 +22,27 @@ httpShutdown.extend()
  */
 export async function downloadPac (force = false) {
   await bootstrapPromise
-  const pacExisted = await pathExists(pacPath)
+  const pacExisted = await pathExists(pacRawPath)
+  let pac = ''
   if (force || !pacExisted) {
     logger.debug('start download pac')
-    const pac = await request('https://raw.githubusercontent.com/shadowsocksrr/pac.txt/pac/pac.txt')
-    pacContent = pac
-    return writeFile(pacPath, pac)
+    pac = await request('https://cdn.jsdelivr.net/gh/shadowsocksrr/pac.txt@pac/pac.txt')
+    await writeFile(pacRawPath, pac) // save raw pac file
+  } else {
+    // always gen pac from raw
+    pac = await readFile(pacRawPath)
   }
+  pac = pac.replace(/__PROXY__/g,
+    `SOCKS5 127.0.0.1:${currentConfig.localPort}; SOCKS 127.0.0.1:${currentConfig.localPort}; PROXY 127.0.0.1:${currentConfig.localPort}; ${currentConfig.httpProxyEnable ? 'PROXY 127.0.0.1:' + currentConfig.httpProxyPort + ';' : ''} DIRECT`)
+  await writeFile(pacPath, pac)
 }
-
-function readPac () {
-  return new Promise(resolve => {
-    if (!pacContent) {
-      resolve(readFile(pacPath))
-    } else {
-      resolve(pacContent)
-    }
-  })
+async function updatePacProxy () {
+  let content = (await readFile(pacRawPath)).toString()
+  content = content.replace(/__PROXY__/g, `SOCKS5 127.0.0.1:${currentConfig.localPort}; SOCKS 127.0.0.1:${currentConfig.localPort}; PROXY 127.0.0.1:${currentConfig.localPort}; ${currentConfig.httpProxyEnable ? 'PROXY 127.0.0.1:' + currentConfig.httpProxyPort + ';' : ''} DIRECT`)
+  await writeFile(pacPath, content)
 }
 let ensurePacPromise = null
+let notified = false
 /**
  * pac server
  */
@@ -51,24 +53,27 @@ export async function serverPac (appConfig, isProxyStarted) {
     try {
       await ensureHostPortValid(host, port)
       pacServer = http.createServer(async (req, res) => {
-        if ((req.url || '').startsWith('/proxy.pac')) {
+        if (req.url && req.url.startsWith('/proxy.pac')) {
           if (ensurePacPromise == null) {
             ensurePacPromise = downloadPac()
           }
           ensurePacPromise.then(() => {
-            return readPac()
-          }).then(buffer => buffer.toString()).then(text => {
             res.writeHead(200, {
               'Content-Type': 'application/x-ns-proxy-autoconfig',
               'Connection': 'close'
             })
-            res.write(text.replace(/__PROXY__/g, `SOCKS5 127.0.0.1:${appConfig.localPort}; SOCKS 127.0.0.1:${appConfig.localPort}; PROXY 127.0.0.1:${appConfig.localPort}; ${appConfig.httpProxyEnable ? 'PROXY 127.0.0.1:' + appConfig.httpProxyPort + ';' : ''} DIRECT`))
-            res.end()
+            createReadStream(pacPath).pipe(res)
           }).catch((error) => {
+            logger.error(`Failed to download pac.txt`)
             logger.error(error)
+            if (!notified) {
+              notified = true
+              showNotification($t('NOTI_PAC_UPDATE_FAILED'))
+            }
           })
         } else {
           res.writeHead(200)
+          res.write('Go /proxy.pac')
           res.end()
         }
       }).withShutdown().listen(port, host)
@@ -118,6 +123,10 @@ appConfig$.subscribe(data => {
       stopPacServer().then(() => {
         serverPac(appConfig, isProxyStarted)
       })
+    }
+    if (['localPort', 'httpProxyEnable', 'httpProxyPort'].some(key => changed.indexOf(key) > -1)) {
+      console.log('Ported UPdated')
+      updatePacProxy()
     }
   }
 })

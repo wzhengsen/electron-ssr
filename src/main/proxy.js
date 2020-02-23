@@ -53,7 +53,7 @@ export async function setProxyToNone (force = true) {
     let command
     if (isWin && await pathExists(winToolPath)) {
       command = `${winToolPath} pac ""`
-    } else if (isMac && await pathExists(macToolPath) && !isOldMacVersion) {
+    } else if (isMac && await pathExists(macToolPath) && !await isOldMacVersion) {
       command = `"${macToolPath}" -m off`
     } else if (isLinux && await isGsettingsAvaliable) {
       command = `gsettings set org.gnome.system.proxy mode 'none'`
@@ -69,7 +69,7 @@ export async function setProxyToGlobal (host, port) {
   let command
   if (isWin && await pathExists(winToolPath)) {
     command = `${winToolPath} global ${host}:${port}`
-  } else if (isMac && await pathExists(macToolPath) && !isOldMacVersion) {
+  } else if (isMac && await pathExists(macToolPath) && !await isOldMacVersion) {
     command = `"${macToolPath}" -m global -p ${port}`
   } else if (isLinux && await isGsettingsAvaliable) {
     command = `gsettings set org.gnome.system.proxy mode 'manual' && gsettings set org.gnome.system.proxy.socks host '${host}' && gsettings set org.gnome.system.proxy.socks port ${port}`
@@ -84,7 +84,7 @@ export async function setProxyToPac (pacUrl) {
   let command
   if (isWin && await pathExists(winToolPath)) {
     command = `${winToolPath} pac ${pacUrl}`
-  } else if (isMac && await pathExists(macToolPath) && !isOldMacVersion) {
+  } else if (isMac && await pathExists(macToolPath) && !await isOldMacVersion) {
     command = `"${macToolPath}" -m auto -u ${pacUrl}`
   } else if (isLinux && await isGsettingsAvaliable) {
     command = `gsettings set org.gnome.system.proxy mode 'auto' && gsettings set org.gnome.system.proxy autoconfig-url ${pacUrl}`

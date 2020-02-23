@@ -56,3 +56,4 @@ install:
 
 script:
   - yarn fetch-dep && yarn run electron:build
+if: tag IS blank

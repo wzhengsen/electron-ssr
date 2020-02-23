@@ -1,7 +1,7 @@
 /**
  * 订阅服务器
  */
-import { readFile, writeFile } from './promisify'
+import { readFile, writeFile } from 'fs-extra'
 import { subscribeUpdateFile } from './bootstrap'
 import { appConfig$ } from './data'
 import { sendData } from './window'
@@ -89,7 +89,7 @@ appConfig$.subscribe(data => {
   const [appConfig, changed] = data
   // 初始化
   if (changed.length === 0) {
-    startTask(appConfig, true)
+    startTask(appConfig, false)
   } else {
     if (['autoUpdateSubscribes', 'subscribeUpdateInterval'].some(key => changed.indexOf(key) > -1)) {
       startTask(appConfig)

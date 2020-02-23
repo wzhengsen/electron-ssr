@@ -1,6 +1,6 @@
 <template>
   <div class="info-panel">
-    <ssr-form v-show="!displaySSR&&!editingGroup.show" class="flex-1 mx-1"/>
+    <SSRNodeForm v-show="!displaySSR&&!editingGroup.show" class="flex-1 mx-1"/>
     <ssr-group v-show="inGroupNode" class="flex-1 ml-1"/>
     <ssr-qrcode v-show="displaySSR&&!inGroupNode"/>
     <div class="control-panel">
@@ -12,8 +12,8 @@
 </template>
 
 <script>
-import SsrForm from './SSRForm'
-import SsrGroup from './SSRGroup'
+import SSRNodeForm from './SSRNodeForm'
+import SsrGroup from './SSRGroupForm'
 import SsrQrcode from './SSRQrcode'
 import { mapState, mapGetters, mapActions } from 'vuex'
 // import { clone } from '@/shared/utils'
@@ -21,7 +21,7 @@ import { isValidSSRConfig } from '@/shared/ssr'
 
 export default {
   components: {
-    SsrForm,
+    SSRNodeForm,
     SsrGroup,
     SsrQrcode
   },

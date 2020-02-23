@@ -22,7 +22,7 @@
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 import { groupConfigs } from '@/shared/utils'
 
-import NodeGroup from './NodeGroup'
+import NodeGroup from './NodeList'
 
 export default {
   components: {
@@ -97,7 +97,8 @@ export default {
     },
     nodeActivated (id) {
       this.updateConfig({
-        index: this.appConfig.configs.findIndex(config => config.id === id)
+        index: this.appConfig.configs.findIndex(config => config.id === id),
+        enable: true
       })
       this.resetState()
     }

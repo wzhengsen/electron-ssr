@@ -8,7 +8,7 @@
 <script>
 /* eslint-disable vue/no-unused-components */
 import { mapState } from 'vuex'
-import SsrNodes from './panel/SSRNodes'
+import SsrNodes from './panel/SSRNodeListPanel'
 import InfoPanel from './panel/InfoPanel'
 export default {
   components: {

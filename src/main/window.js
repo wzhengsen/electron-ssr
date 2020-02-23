@@ -11,9 +11,6 @@ let readyPromise
  * 创建主视图
  */
 export function createWindow () {
-  if (process.platform === 'darwin') {
-    app.dock.hide()
-  }
   mainWindow = new BrowserWindow({
     height: 480,
     width: 800,
@@ -24,8 +21,7 @@ export function createWindow () {
     show: true,
     webPreferences: { webSecurity: process.env.NODE_ENV === 'production', nodeIntegration: true }
   })
-  // process.env.NODE_ENV !== 'development'
-  mainWindow.setMenu(null)
+  if (process.platform === 'darwin') { app.dock.show() }
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
@@ -41,6 +37,9 @@ export function createWindow () {
     if (!isQuiting()) {
       e.preventDefault()
       mainWindow.hide()
+      if (process.platform === 'darwin') {
+        app.dock.hide()
+      }
     }
   })
 
@@ -66,6 +65,9 @@ export function getWindow () {
 export function showWindow () {
   if (mainWindow) {
     mainWindow.show()
+    if (process.platform === 'darwin') {
+      app.dock.show()
+    }
   }
 }
 
