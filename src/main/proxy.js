@@ -122,16 +122,14 @@ export function startProxy (mode) {
 // 监听配置变化
 appConfig$.subscribe(data => {
   const [appConfig, changed, , isProxyStarted] = data
-  // 必须得有节点选中
   if (isProxyStarted) {
     if (!changed.length) {
       startProxy(appConfig.sysProxyMode)
     } else {
-      if (appConfig.sysProxyMode === 1 && changed.indexOf('pacPort') > -1) {
-        // pacPort变更时
+      if (appConfig.sysProxyMode === 1 && (changed.indexOf('pacPort') > -1 || changed.indexOf('enable') > -1)) {
+        // pacPort changes or enable changed
         startProxy(1)
-      } else if (appConfig.sysProxyMode === 2 && changed.indexOf('localPort') > -1) {
-        // localPort变更时
+      } else if (appConfig.sysProxyMode === 2 && (changed.indexOf('localPort') > -1 || changed.indexOf('enable') > -1)) {
         startProxy(2)
       }
     }

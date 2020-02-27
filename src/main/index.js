@@ -41,12 +41,8 @@ if (!isPrimaryInstance) {
       })
     }
     createWindow()
-    if (isWin || isMac) {
-      app.setAsDefaultProtocolClient('ssr')
-      app.setAsDefaultProtocolClient('ss')
-    }
-
-    // 开机自启动配置
+    // load manually when window created
+    appConfig$.init()
     const AutoLauncher = new AutoLaunch({
       name: 'Electron SSR',
       isHidden: true,
@@ -54,30 +50,30 @@ if (!isPrimaryInstance) {
         useLaunchAgent: true
       }
     })
-
-    appConfig$.subscribe(data => {
+    appConfig$.subscribe(async (data) => {
       const [appConfig, changed] = data
-      if (!changed.length) {
+      if (changed.length === 0) {
+        // if there is no config, or ssrPath is not set, show window
         // 初始化时没有配置则打开页面，有配置则不显示主页面
-        if (!appConfig.configs.length || !appConfig.ssrPath) {
+        if (appConfig.configs.length === 0 || !appConfig.ssrPath) {
           showWindow()
         }
-      }
-      if (!changed.length || changed.indexOf('autoLaunch') > -1) {
-        // 初始化或者选项变更时
-        AutoLauncher.isEnabled().then(enabled => {
-          // 状态不相同时
+      } else if (changed.indexOf('autoLaunch') > -1) {
+        try {
+          let enabled = await AutoLauncher.isEnabled()
           if (appConfig.autoLaunch !== enabled) {
-            return AutoLauncher[appConfig.autoLaunch ? 'enable' : 'disable']().catch(() => {
-              logger.error(`${appConfig.autoLaunch ? '执行' : '取消'}开机自启动失败`)
-            })
+            await AutoLauncher[appConfig.autoLaunch ? 'enable' : 'disable']()
           }
-        }).catch(() => {
-          logger.error('获取开机自启状态失败')
-        })
+        } catch (error) {
+          logger.error('Failed to process auto start')
+          logger.error(error)
+        }
       }
     })
-
+    if (isWin || isMac) {
+      app.setAsDefaultProtocolClient('ssr')
+      app.setAsDefaultProtocolClient('ss')
+    }
     // 电源状态检测
     powerMonitor.on('suspend', () => {
       // 系统挂起时
@@ -92,10 +88,10 @@ if (!isPrimaryInstance) {
       // startProxy()
       startTask(currentConfig)
     })
-  }).then(err => {
+  }).catch(err => {
+    logger.error('Failed at bootstrapPromise')
     logger.error(err)
   })
-
   app.on('window-all-closed', () => {
     logger.debug('window-all-closed')
     if (process.platform !== 'darwin') {
@@ -111,10 +107,6 @@ if (!isPrimaryInstance) {
     e.preventDefault()
     const reflect = p => p.then(() => ({ status: 'fulfilled' }),
       e => ({ e, status: 'rejected' }))
-    stopTask()
-    destroyTray()
-    destroyWindow()
-    clearShortcuts()
     const asyncTask = [
       setProxyToNone(),
       stopHttpProxyServer(),
@@ -128,7 +120,10 @@ if (!isPrimaryInstance) {
         }
       }
     })
-
+    stopTask()
+    destroyTray()
+    clearShortcuts()
+    destroyWindow()
     app.exit(0)
   })
 

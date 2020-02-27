@@ -15,9 +15,10 @@ const macImages = [
   '!static/pac?(@2x).png',
   '!static/global?(@2x).png'
 ]
+extraFiles.push({ from: 'src/lib/LICENSE', to: './3rdparty/LICENSE' })
 switch (platform) {
   case 'darwin':
-    extraFiles.push({ from: 'src/lib/proxy_conf_helper', to: './' })
+    extraFiles.push({ from: 'src/lib/proxy_conf_helper', to: './3rdparty/proxy_conf_helper' })
     extraFiles.push({ from: 'src/lib/socks2http', to: './3rdparty/socks2http' })
     files = files.concat(macImages)
     break
@@ -104,6 +105,10 @@ module.exports = {
         },
         rpm: {
           depends: ['libsodium', 'openssl', 'dconf']
+        },
+        publish: {
+          'provider': 'github',
+          'owner': process.env.REPO_OWNER || 'shadowsocksrr'
         }
       }
     },

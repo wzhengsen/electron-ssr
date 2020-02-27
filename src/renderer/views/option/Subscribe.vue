@@ -7,7 +7,7 @@
       <div class="ml-auto flex-inline flex-ai-center">
         <i-input v-show="showNewUrl" class="mr-2 url-input" :class="{'input-error': urlError}"
           v-model="url" :placeholder="$t('UI_ENTER_VALID_URL')" icon="plus" ref="input"
-          @keyup.enter.native="save" @keyup.esc.native="cancel" @on-blur="cancel"/>
+          @keyup.enter.native="saveInput" @keyup.esc.native="cancelInput" @on-blur="cancelInput"/>
         <i-checkbox :value="appConfig.autoUpdateSubscribes" @on-change="onUpdateChange">{{$t('UI_SETTING_UPDATE_AUTO')}}</i-checkbox>
         <div v-if="appConfig.autoUpdateSubscribes" class="flex-inline flex-ai-center cycle-wrapper">
           <span>{{$t('UI_PER')}}&nbsp;</span>
@@ -27,7 +27,8 @@
 </template>
 <script>
 import { mapState, mapMutations, mapActions } from 'vuex'
-import { request, isSubscribeContentValid, somePromise } from '../../../shared/utils'
+import { isSubscribeContentValid } from '@/shared/utils'
+import { saveUpdateTime } from '@/renderer/ipc'
 
 const URL_REGEX = /^https?:\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]/
 // 单位对应的小时倍数
@@ -184,7 +185,8 @@ export default {
     },
     update () {
       this.loading = true
-      this.updateSubscribes(this.selectedRows).then(updatedCount => {
+      this.updateSubscribes(this.selectedRows).then(({ updatedCount, updatedArr, failedArr }) => {
+        saveUpdateTime()
         this.loading = false
         this.$Message.success(`已更新${updatedCount}个节点`)
       })
@@ -195,9 +197,8 @@ export default {
       this.updateConfig({ serverSubscribes: clone })
       this.selectedRows = []
     },
-    // 同时使用electron的net和fetch api请求
     requestSubscribeUrl (url) {
-      return somePromise([request(url, true), fetch(url).then(res => res.text())])
+      return fetch(url).then(res => res.text())
     },
     // 根据订阅返回的节点数据更新ssr配置项
     updateSubscribedConfigs (configs) {
@@ -211,7 +212,7 @@ export default {
         this.$refs.input.focus()
       })
     },
-    cancel () {
+    cancelInput () {
       this.showNewUrl = false
       this.url = ''
       this.urlError = false
@@ -222,17 +223,17 @@ export default {
       this.editingRowUrl = ''
       this.editingUrlError = false
     },
-    save () {
+    saveInput () {
       if (URL_REGEX.test(this.url)) {
         this.loading = true
         const url = this.url
-        // 未发生改变
-        if (this.appConfig.serverSubscribes.every(serverSubscribe => {
+        const notExisted = this.appConfig.serverSubscribes.every(serverSubscribe => {
           return serverSubscribe.URL !== url
-        })) {
-          this.requestSubscribeUrl(url).then(res => {
+        })
+        if (notExisted) {
+          this.requestSubscribeUrl(url).then(textContent => {
             this.loading = false
-            const [groupCount, groupConfigs] = isSubscribeContentValid(res)
+            const [groupCount, groupConfigs] = isSubscribeContentValid(textContent)
             if (groupCount > 0) {
               const clone = this.appConfig.serverSubscribes.slice()
               let groups = ''
@@ -246,6 +247,7 @@ export default {
                 serverSubscribes: clone,
                 configs: this.appConfig.configs.concat(configs)
               })
+              saveUpdateTime()
             }
           }).catch(() => {
             this.loading = false
@@ -253,7 +255,7 @@ export default {
         } else {
           this.loading = false
         }
-        this.cancel()
+        this.cancelInput()
       } else {
         this.urlError = true
       }

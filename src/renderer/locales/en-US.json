@@ -54,7 +54,7 @@
   "UI_SUBSCRIPTION_URL":"URL",
   "UI_ENTER_NEW_SUB_URL":"Please enter new Subscription URL",
   "UI_GROUP_NAME":"Group name",
-  "UI_NO_NODE":"There is no node. Please go Setting-Add to add one",
+  "UI_NO_NODE":"There is no node here. Please go `Add` to add one.",
 
   "UI_FEATURE_CROSS_PLATFORM": "Cross Platform",
   "UI_FEATURE_CP_DETAIL":"Support Windows, MacOs and Linux",

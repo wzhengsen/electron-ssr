@@ -17,13 +17,6 @@ export const readyPromise = new Promise(resolve => {
     app.once('ready', resolve)
   }
 })
-isPythonInstalled.then(async (value) => {
-  // 检查python是否安装
-  if (!value) {
-    await readyPromise
-    dialog.showErrorBox($t('NOTI_PYTHON_MISSING_TITLE'), $t('NOTI_PYTHON_MISSING_DETAIL'))
-  }
-})
 
 // 未捕获的rejections
 process.on('unhandledRejection', (reason) => {
@@ -67,6 +60,9 @@ if (isWin) {
     _s2hPath = path.resolve(__dirname, '../src/lib/socks2http')
   } else {
     _s2hPath = path.join(path.dirname(exePath), './3rdparty/socks2http')
+    if (isMac) {
+      _s2hPath = path.join(path.dirname(exePath), '../3rdparty/socks2http')
+    }
   }
 }
 export const winToolPath = _winToolPath
@@ -85,10 +81,13 @@ async function init () {
   // 判断配置文件是否存在，不存在用默认数据写入
   const configFileExists = await pathExists(appConfigPath)
   await ensureDir(path.join(appConfigDir, 'logs'))
-
-  // 初始化确保文件存在, 10.11版本以下不支持该功能
-
   await readyPromise
+  isPythonInstalled.then(async (value) => {
+    // Check Python existence
+    if (!value) {
+      dialog.showErrorBox($t('NOTI_PYTHON_MISSING_TITLE'), $t('NOTI_PYTHON_MISSING_DETAIL'))
+    }
+  })
   if (!configFileExists) {
     // todo better locale detect
     let config = null

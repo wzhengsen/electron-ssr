@@ -137,3 +137,4 @@ dist_electron
 src/lib/*
 !src/lib/mac_service.sh
 !src/lib/proxy_conf_helper
+!src/lib/LICENSE

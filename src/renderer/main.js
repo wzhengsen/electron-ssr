@@ -1,10 +1,10 @@
 import Vue from 'vue'
 import './components'
-import { getInitConfig } from './ipc'
+import { getInitConfig, register } from './ipc'
 import store from './store'
 import App from './App'
 import i18n from './i18n'
-require('./ipc')
+register()
 Vue.config.productionTip = false
 
 // 启动应用时获取初始化数据

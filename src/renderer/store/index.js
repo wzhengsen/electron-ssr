@@ -4,11 +4,9 @@ import defaultConfig from '@/shared/config'
 import {
   merge,
   clone,
-  request,
   isSubscribeContentValid,
   getUpdatedKeys,
-  isConfigEqual,
-  somePromise
+  isConfigEqual
 } from '@/shared/utils'
 import { defaultSSRConfig } from '@/shared/ssr'
 import { syncConfig } from '../ipc'
@@ -261,14 +259,19 @@ export default new Vuex.Store({
       }
     },
     // 更新所有订阅服务器
-    updateSubscribes ({ state, dispatch }, updateSubscribes) {
+    async updateSubscribes ({ state, dispatch }, updateSubscribes) {
       // 要更新的订阅服务器
       updateSubscribes = updateSubscribes || state.appConfig.serverSubscribes
       // 累计更新节点数
       let updatedCount = 0
-      return Promise.all(updateSubscribes.map(subscribe => {
-        return somePromise([request(subscribe.URL, true), fetch(subscribe.URL).then(res => res.text())]).then(res => {
-          const [groupCount, groupConfigs] = isSubscribeContentValid(res)
+      const updatedArr = []
+      const failedArr = []
+      await Promise.all(updateSubscribes.map(async subscribe => {
+        try {
+          const res = await fetch(subscribe.URL)
+          updatedArr.push(subscribe.URL)
+          const textContent = await res.text()
+          const [groupCount, groupConfigs] = isSubscribeContentValid(textContent)
           if (groupCount > 0) {
             for (const groupName in groupConfigs) {
               const configs = groupConfigs[groupName]
@@ -302,10 +305,11 @@ export default new Vuex.Store({
               }
             }
           }
-        })
-      })).then(() => {
-        return updatedCount
-      })
+        } catch (error) {
+          failedArr.push(subscribe.URL)
+        }
+      }))
+      return { updatedCount, updatedArr, failedArr }
     },
     removeEditingNode (context) {
       const clone = context.state.appConfig.configs.slice()

@@ -3,6 +3,7 @@ import { readJson } from 'fs-extra'
 import downloadGitRepo from 'download-git-repo'
 import * as events from '@/shared/events'
 import { appConfigPath, defaultSSRDownloadDir } from './bootstrap'
+import { saveUpdateTime } from './subscribe'
 import { updateAppConfig } from './data'
 import { hideWindow, sendData } from './window'
 import { importConfigFromClipboard } from './tray-handler'
@@ -54,6 +55,9 @@ ipcMain.on(events.EVENT_APP_HIDE_WINDOW, () => {
 }).on(events.EVENT_APP_OPEN_DIALOG, async (e, params) => {
   const ret = await dialog.showOpenDialog(params)
   e.reply(events.EVENT_APP_OPEN_DIALOG, ret.filePaths)
+}).on(events.EVENT_SUBSCRIBE_SAVE_TIME, () => {
+  logger.debug('Saving Subsciption Update Time')
+  saveUpdateTime()
 })
 
 /**

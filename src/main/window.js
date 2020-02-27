@@ -4,6 +4,7 @@ import logger from './logger'
 import {
   createProtocol
 } from 'vue-cli-plugin-electron-builder/lib'
+import { isLinux } from '@/shared/env'
 
 let mainWindow
 let readyPromise
@@ -18,7 +19,7 @@ export function createWindow () {
     resizable: false,
     minimizable: false,
     maximizable: false,
-    show: true,
+    show: isLinux,
     webPreferences: { webSecurity: process.env.NODE_ENV === 'production', nodeIntegration: true }
   })
   if (process.platform === 'darwin') { app.dock.show() }
@@ -34,6 +35,7 @@ export function createWindow () {
   // hide to tray when window closed
   mainWindow.on('close', (e) => {
     // 当前不是退出APP的时候才去隐藏窗口
+    // hide the windows if not quiting
     if (!isQuiting()) {
       e.preventDefault()
       mainWindow.hide()

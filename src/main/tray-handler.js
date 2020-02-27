@@ -1,6 +1,6 @@
 import { app, shell, clipboard } from 'electron'
 import { readJson, writeJson } from 'fs-extra'
-import { join } from 'path'
+import path from 'path'
 import sudo from 'sudo-prompt'
 import bootstrapPromise, { appConfigPath, exePath, macToolPath } from './bootstrap'
 import logger, { logPath } from './logger'
@@ -67,7 +67,7 @@ export function importConfigFromFile () {
 export function exportConfigToFile () {
   const _path = chooseSavePath('选择导出的目录')
   if (_path) {
-    writeJson(join(_path, 'gui-config.json'), currentConfig, { spaces: '\t' })
+    writeJson(path.join(_path, 'gui-config.json'), currentConfig, { spaces: '\t' })
   }
 }
 
@@ -152,7 +152,7 @@ export async function installMacHelpToolTray () {
 }
 export async function installMacHelpTool () {
   const helperPath = process.env.NODE_ENV === 'development'
-    ? join(__dirname, '../src/lib/proxy_conf_helper')
-    : join(exePath, '../../../Contents/proxy_conf_helper')
+    ? path.join(__dirname, '../src/lib/proxy_conf_helper')
+    : path.join(path.dirname(exePath), '../3rdparty/proxy_conf_helper')
   await sudoMacCommand(`cp ${helperPath} "${macToolPath}" && chown root:admin "${macToolPath}" && chmod a+rx "${macToolPath}" && chmod +s "${macToolPath}"`)
 }

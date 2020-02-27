@@ -45,3 +45,4 @@ export const EVENT_RX_SYNC_RENDERER = 'rx.sync.renderer'
 
 export const EVENT_CONFIG_CREATE = 'config.new'
 export const EVENT_SUBSCRIBE_NEW = 'subscribe.new'
+export const EVENT_SUBSCRIBE_SAVE_TIME = 'subscribe.update.time'

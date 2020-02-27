@@ -23,6 +23,7 @@ httpShutdown.extend()
 export async function downloadPac (force = false) {
   await bootstrapPromise
   const pacExisted = await pathExists(pacRawPath)
+  logger.debug(`${pacRawPath} pacExisted: ${pacExisted}`)
   let pac = ''
   if (force || !pacExisted) {
     logger.debug('start download pac')
@@ -30,7 +31,7 @@ export async function downloadPac (force = false) {
     await writeFile(pacRawPath, pac) // save raw pac file
   } else {
     // always gen pac from raw
-    pac = await readFile(pacRawPath)
+    pac = (await readFile(pacRawPath)).toString()
   }
   pac = pac.replace(/__PROXY__/g,
     `SOCKS5 127.0.0.1:${currentConfig.localPort}; SOCKS 127.0.0.1:${currentConfig.localPort}; PROXY 127.0.0.1:${currentConfig.localPort}; ${currentConfig.httpProxyEnable ? 'PROXY 127.0.0.1:' + currentConfig.httpProxyPort + ';' : ''} DIRECT`)
@@ -46,7 +47,7 @@ let notified = false
 /**
  * pac server
  */
-export async function serverPac (appConfig, isProxyStarted) {
+async function serverPac (appConfig, isProxyStarted) {
   if (isProxyStarted) {
     const host = currentConfig.shareOverLan ? '0.0.0.0' : '127.0.0.1'
     const port = appConfig.pacPort !== undefined ? appConfig.pacPort : currentConfig.pacPort || 1240

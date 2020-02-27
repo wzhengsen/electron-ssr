@@ -1,6 +1,3 @@
-/**
- * 订阅服务器
- */
 import { readFile, writeFile } from 'fs-extra'
 import { subscribeUpdateFile } from './bootstrap'
 import { appConfig$ } from './data'
@@ -22,20 +19,22 @@ export async function startTask (appConfig, forceUpdate = false) {
   stopTask()
   if (appConfig.autoUpdateSubscribes && appConfig.serverSubscribes.length) {
     if (forceUpdate) {
-      await update(appConfig)
+      await update()
     }
     // 单位是 时
     const intervalTime = appConfig.subscribeUpdateInterval * 3600000
     try {
       if (!forceUpdate) {
         const content = await readFile(subscribeUpdateFile, 'utf8')
-        lastUpdateTime = new Date(content.toString())
+        lastUpdateTime = new Date(content)
       }
       const nextUpdateTime = new Date(+lastUpdateTime + intervalTime)
       logger.info('next subscribe update time: %s', nextUpdateTime)
       timeout(nextUpdateTime, intervalTime, appConfig)
     } catch (e) {
-      update(appConfig)
+      logger.error('Something wrong while starting subscribe task')
+      logger.error(e)
+      update()
     }
   }
 }
@@ -43,7 +42,7 @@ export async function startTask (appConfig, forceUpdate = false) {
 // 间隔多久开始下一次更新，用下一次间隔时间减去当前时间
 function timeout (nextUpdateTime, intervalTime, appConfig) {
   _timeout = setTimeout(() => {
-    update(appConfig)
+    update()
     interval(intervalTime, appConfig)
   }, nextUpdateTime - new Date())
 }
@@ -51,12 +50,12 @@ function timeout (nextUpdateTime, intervalTime, appConfig) {
 // 往后的更新都按照interval来进行
 function interval (intervalTime, appConfig) {
   _interval = setInterval(() => {
-    update(appConfig)
+    update()
   }, intervalTime)
 }
 
 // 保存最近一次的更新时间
-async function saveUpdateTime () {
+export async function saveUpdateTime () {
   const date = new Date()
   lastUpdateTime = date
   logger.info('last update time: %s', lastUpdateTime)
@@ -64,7 +63,7 @@ async function saveUpdateTime () {
 }
 
 // 发起更新
-async function update (appConfig) {
+async function update () {
   await saveUpdateTime()
   updateSubscribes()
 }
@@ -89,7 +88,7 @@ appConfig$.subscribe(data => {
   const [appConfig, changed] = data
   // 初始化
   if (changed.length === 0) {
-    startTask(appConfig, false)
+    startTask(appConfig)
   } else {
     if (['autoUpdateSubscribes', 'subscribeUpdateInterval'].some(key => changed.indexOf(key) > -1)) {
       startTask(appConfig)
