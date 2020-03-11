@@ -14,6 +14,9 @@
         <i-form-item class="flex-1" :label="$t('UI_SETTING_AUTO_START')">
           <i-checkbox v-model="form.autoLaunch" @on-change="update('autoLaunch')" />
         </i-form-item>
+        <i-form-item class="flex-1" :label="$t('UI_SETTING_HIDE_WINDOW')">
+          <i-checkbox v-model="form.hideWindow" @on-change="update('hideWindow')" />
+        </i-form-item>
         <i-form-item class="flex-1" :label="$t('UI_SETTING_SHARE_LAN')">
           <i-checkbox v-model="form.shareOverLan" @on-change="update('shareOverLan')" />
         </i-form-item>
@@ -48,10 +51,10 @@
         </i-form-item>
       </div>
       <i-form-item prop="lang" label="Language" :label-width="120">
-          <i-select v-model="form.lang" class="language-selector-view" @input="update('lang')">
-            <i-option value="zh-CN">简体中文</i-option>
-            <i-option value="en-US">English</i-option>
-          </i-select>
+        <i-select v-model="form.lang" class="language-selector-view" @input="update('lang')">
+          <i-option value="zh-CN">简体中文</i-option>
+          <i-option value="en-US">English</i-option>
+        </i-select>
       </i-form-item>
     </i-form>
   </div>
@@ -68,6 +71,7 @@ export default {
       form: {
         ssrPath: appConfig.ssrPath,
         autoLaunch: appConfig.autoLaunch,
+        hideWindow: appConfig.hideWindow,
         shareOverLan: appConfig.shareOverLan,
         localPort: appConfig.localPort,
         pacPort: appConfig.pacPort,
@@ -83,7 +87,9 @@ export default {
                 if (exists) {
                   return Promise.resolve()
                 }
-                return Promise.reject(new Error(this.$t('UI_INCORRECT_FOLDER')))
+                return Promise.reject(
+                  new Error(this.$t('UI_INCORRECT_FOLDER'))
+                )
               })
             }
           }
@@ -143,7 +149,7 @@ export default {
 }
 </script>
 <style lang="stylus" scoped>
-.language-selector-view{
-  width 180px;
+.language-selector-view {
+  width: 180px;
 }
 </style>

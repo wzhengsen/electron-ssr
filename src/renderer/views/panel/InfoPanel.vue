@@ -5,18 +5,17 @@
     <ssr-qrcode v-show="displaySSR&&!inGroupNode"/>
     <div class="control-panel">
       <i-button class="w-6r" type="error" @click="removeClick" :disabled="buttonState">{{$t('UI_DELETE')}}</i-button>
-      <i-button class="w-6r ml-3" type="primary" @click="save" :disabled="buttonState">{{$t('UI_SAVE')}}</i-button>
+      <i-button class="w-6r ml-3" type="primary" @click="save">{{$t('UI_SAVE')}}</i-button>
       <i-checkbox class="ml-3" v-model="displaySSR">{{$t('UI_DISPLAY_QRCODE')}}</i-checkbox>
     </div>
   </div>
 </template>
 
 <script>
-import SSRNodeForm from './SSRNodeForm'
-import SsrGroup from './SSRGroupForm'
-import SsrQrcode from './SSRQrcode'
+import SSRNodeForm from '@/renderer/components/form/SSRNodeForm'
+import SsrGroup from '@/renderer/components/form/SSRGroupForm'
+import SsrQrcode from '@/renderer/components/node/SSRQrcode'
 import { mapState, mapGetters, mapActions } from 'vuex'
-// import { clone } from '@/shared/utils'
 import { isValidSSRConfig } from '@/shared/ssr'
 
 export default {

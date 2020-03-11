@@ -14,6 +14,7 @@
          :id="node.id"
          :activated="node.id===activatedConfigId"
          :name="node.title"
+         :disabled="disabled"
          @nodeSelected="nodeSelected"
          @nodeActivated="nodeActivated"/>
      </div>
@@ -31,7 +32,8 @@ export default {
     node: Object,
     selectedConfigId: String,
     activatedConfigId: String,
-    selectedGroupName: String
+    selectedGroupName: String,
+    disabled: Boolean
   },
   data () {
     return {

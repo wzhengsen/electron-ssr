@@ -4,7 +4,6 @@ import logger from './logger'
 import {
   createProtocol
 } from 'vue-cli-plugin-electron-builder/lib'
-import { isLinux } from '@/shared/env'
 
 let mainWindow
 let readyPromise
@@ -19,7 +18,7 @@ export function createWindow () {
     resizable: false,
     minimizable: false,
     maximizable: false,
-    show: isLinux,
+    show: false,
     webPreferences: { webSecurity: process.env.NODE_ENV === 'production', nodeIntegration: true }
   })
   if (process.platform === 'darwin') { app.dock.show() }

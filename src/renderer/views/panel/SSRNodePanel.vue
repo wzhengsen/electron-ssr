@@ -2,13 +2,14 @@
   <div class="panel-nodes flex flex-column h-100">
     <div class="node-group" ref="nodeGroup">
       <div class="wrapper" v-if="groupedNodes&&groupedNodes.length !== 0">
-        <node-group
+        <SSRNodeGroup
           v-for="group in groupedNodes"
           :activatedConfigId="activatedConfigId"
           :selectedConfigId="selectedConfigId"
           :selectedGroupName="selectedConfigId || selectedGroupName"
           :key="group.id"
           :node="group"
+          :disabled="!appConfig.enable"
           @nodeSelected="nodeSelected"
           @nodeActivated="nodeActivated"
         />
@@ -18,15 +19,14 @@
   </div>
 </template>
 <script>
-/* eslint-disable vue/no-unused-components */
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 import { groupConfigs } from '@/shared/utils'
 
-import NodeGroup from './NodeList'
+import SSRNodeGroup from '@/renderer/components/node/SSRNodeGroup'
 
 export default {
   components: {
-    NodeGroup
+    SSRNodeGroup
   },
   data () {
     return {

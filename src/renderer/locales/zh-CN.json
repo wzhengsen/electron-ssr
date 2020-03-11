@@ -24,6 +24,7 @@
   "UI_SETTING_SSR_PYTHON_DIR": "ssr python 目录",
   "UI_SETTING_SELECT_SSR_PYTHON_DIR": "选择ssr目录",
   "UI_SETTING_AUTO_START": "自动启动",
+  "UI_SETTING_HIDE_WINDOW": "隐藏窗口",
   "UI_SETTING_PAC_PORT": "Pac 端口",
   "UI_SETTING_SHARE_LAN": "局域网共享",
   "UI_SETTING_LOCAL_LISTEN_PORT": "本地监听端口",

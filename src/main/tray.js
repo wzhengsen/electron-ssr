@@ -72,6 +72,7 @@ async function generateMenus (appConfig) {
         handler.toggleProxy(appConfig.sysProxyMode)
       }
     },
+    { label: $t('MENU_SUB_COPY_HTTP_PROXY'), click: handler.copyHttpProxyCode },
     {
       label: $t('MENU_PAC'),
       submenu: [

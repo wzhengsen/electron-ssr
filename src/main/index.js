@@ -55,7 +55,7 @@ if (!isPrimaryInstance) {
       if (changed.length === 0) {
         // if there is no config, or ssrPath is not set, show window
         // 初始化时没有配置则打开页面，有配置则不显示主页面
-        if (appConfig.configs.length === 0 || !appConfig.ssrPath) {
+        if (!appConfig.hideWindow || appConfig.configs.length === 0 || !appConfig.ssrPath) {
           showWindow()
         }
       } else if (changed.indexOf('autoLaunch') > -1) {

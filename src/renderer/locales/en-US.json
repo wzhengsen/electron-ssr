@@ -25,6 +25,7 @@
   "UI_SETTING_SSR_PYTHON_DIR": "SSR python Dir",
   "UI_SETTING_SELECT_SSR_PYTHON_DIR": "Select SSR Dir",
   "UI_SETTING_AUTO_START": "Auto Start",
+  "UI_SETTING_HIDE_WINDOW": "Hide Window",
   "UI_SETTING_PAC_PORT": "Pac Port",
   "UI_SETTING_SHARE_LAN": "Share LAN",
   "UI_SETTING_LOCAL_LISTEN_PORT": "Local Listen Port",

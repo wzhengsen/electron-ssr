@@ -9,6 +9,7 @@ const defaultConfig = {
   enable: false,
   // 开机自启
   autoLaunch: false,
+  hideWindow: !isLinux,
   // 是否局域网共享
   shareOverLan: false,
   // 本地socks端口

@@ -1,15 +1,15 @@
 <template>
   <app-view name="panel" class="px-2 py-2" row>
-    <node-list-panel></node-list-panel>
-    <info-panel></info-panel>
+    <SSRNodePanel/>
+    <InfoPanel/>
   </app-view>
 </template>
 <script>
-import NodeListPanel from './panel/SSRNodeListPanel'
+import SSRNodePanel from './panel/SSRNodePanel'
 import InfoPanel from './panel/InfoPanel'
 export default {
   components: {
-    NodeListPanel,
+    SSRNodePanel,
     InfoPanel
   }
 }
