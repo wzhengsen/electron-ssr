@@ -21,6 +21,7 @@
   "UI_SETTING_COMMON": "Common",
   "UI_SETTING_SSR": "SSR",
   "UI_SETTING_SUBSCRIPTION": "Subscription",
+  "UI_SETTING_SHORTCUT": "Shortcut",
 
   "UI_SETTING_SSR_PYTHON_DIR": "SSR python Dir",
   "UI_SETTING_SELECT_SSR_PYTHON_DIR": "Select SSR Dir",
@@ -32,7 +33,9 @@
   "UI_SETTING_HTTP_PORT": "Http Proxy Port",
   "UI_SETTING_ENABLE_HTTP_PORT": "Enable Http Proxy",
   "UI_SETTING_SSR_INPUT_PLACEHOLDER": "Please select shadowsocks Dir",
-
+  "UI_SETTING_SHORTCUT_TOGGLE_VISI": "Toggle Windows",
+  "UI_SETTING_SHORTCUT_CHANGE_SYS_PROXY": "Change Sys Proxy Mode",
+  "UI_SETTING_SHORTCUT_REGISTED":"Shortcut {shortcutStr} has been registered.",
   "UI_DONE":"Done",
   "UI_BACK":"Back",
 
@@ -73,5 +76,14 @@
   "UI_CLICK_TO_RETRY":"Click To Retry",
   "UI_PLEASE_SELECT_SS_FOLDER":"Please Select shadowsocks Folder",
   "UI_INCORRECT_FOLDER":"Incorrect folder, please reselect",
-  "UI_DOWNLOADING_FOR_YOU":"Downloading for you"
+  "UI_DOWNLOADING_FOR_YOU":"Downloading for you",
+
+
+  "NOTI_FAILED_TO_FIND_QRCODE": "Failed to find any Qr Code",
+  "NOTI_TYPE_ERROR_QRCODE": "Scanning Failed",
+  "NOTI_SUCC_ADD_CONFIGS":"Add {count} configs",
+  "NOTI_SUB_SUCC_UPDATE_COUNT":"Subscription Updated, {count} nodes updated",
+  "NOTI_SUB_SUCC_UPDATE_NO_COUNT":"Subscription Updated",
+  "NOTI_SUB_FAIL_UPDATE": "Failed to update subscription",
+  "NOTI":"Notification"
 }

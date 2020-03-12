@@ -60,7 +60,8 @@ function runPythonSSR (params) {
   })
   pythonSSRInstance.once('exit', (code) => {
     if (!quitByCommand) {
-      logger.debug(`Python SSR exit with code: ${code}`)
+      // todo: notify user python quit
+      logger.error(`Python SSR quit with code: ${code}`)
       pythonSSRInstance = null
     }
   })

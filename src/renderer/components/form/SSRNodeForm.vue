@@ -37,7 +37,7 @@
       <i-input :value="editingConfig.remarks" @input="v=>onInput('remarks', v)"/>
     </i-form-item>
     <i-form-item :label="$t('SSR_GROUP')">
-      <i-auto-complete :data="filteredGroups" clearable placeholder="未分组" placement="top"
+      <i-auto-complete :data="filteredGroups" clearable :placeholder="$t('SSR_UNGROUPED')" placement="top"
         :value="editingConfig.group" @input="v=>onInput('group', v)"/>
     </i-form-item>
   </i-form>

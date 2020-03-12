@@ -12,7 +12,7 @@ let readyPromise
  */
 export function createWindow () {
   mainWindow = new BrowserWindow({
-    height: 480,
+    height: 500,
     width: 800,
     center: true,
     resizable: false,
@@ -21,7 +21,6 @@ export function createWindow () {
     show: false,
     webPreferences: { webSecurity: process.env.NODE_ENV === 'production', nodeIntegration: true }
   })
-  if (process.platform === 'darwin') { app.dock.show() }
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)

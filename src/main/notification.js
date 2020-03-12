@@ -4,10 +4,13 @@ import { EVENT_APP_NOTIFY_MAIN } from '../shared/events'
 import { isMac } from '../shared/env'
 import { notificationIcon } from '../shared/icon'
 import logger from './logger'
-
+import $t from './locales'
 const isDesktopNotificationSupported = Notification.isSupported()
 
-export function showNotification (body, title = '通知', onClick) {
+export function showNotification (body, title, onClick) {
+  if (!title) {
+    title = $t('NOTI')
+  }
   if (isDesktopNotificationSupported) {
     const notification = new Notification({
       title, body, silent: false, icon: !isMac ? notificationIcon : undefined
@@ -17,7 +20,7 @@ export function showNotification (body, title = '通知', onClick) {
     }
     notification.show()
   } else {
-    logger.debug('不支持原生通知，将使用HTML5通知')
+    logger.debug('Using HTML Notification')
     sendData(EVENT_APP_NOTIFY_MAIN, { title, body })
   }
 }

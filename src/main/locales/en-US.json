@@ -43,5 +43,9 @@
     "NOTI_PYTHON_MISSING_TITLE": "No python detected",
     "NOTI_PYTHON_MISSING_DETAIL": "The backend of this program requires python\n Please Make sure you have it installed",
     "NOTI_PAC_UPDATE_SUCC":"PAC File Updated",
-    "NOTI_PAC_UPDATE_FAILED":"PAC Updating Failed, Please check your network and DNS"
+    "NOTI_PAC_UPDATE_FAILED":"PAC Updating Failed, Please check your network and DNS",
+    "NOTI_SHORTCUT_REGISTERED": "{length} global failed to registered, go Shortcut Panel and set it again",
+
+    "NOTI_TYPE_ERROR":"Error",
+    "NOTI":"Notification"
 }

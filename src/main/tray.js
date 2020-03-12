@@ -91,7 +91,6 @@ async function generateMenus (appConfig) {
         { label: $t('MENU_SUB_OPEN_CF'), click: handler.openConfigFile }
       ]
     },
-    { label: $t('MENU_SUB_CHECK_UPDATE'), click: handler.copyHttpProxyCode },
     menuHelp,
     { role: 'quit' }
   ]

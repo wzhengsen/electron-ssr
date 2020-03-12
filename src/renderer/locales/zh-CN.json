@@ -21,6 +21,8 @@
   "UI_SETTING_COMMON": "通用设置",
   "UI_SETTING_SSR": "SSR设置",
   "UI_SETTING_SUBSCRIPTION": "订阅管理",
+  "UI_SETTING_SHORTCUT": "快捷键",
+
   "UI_SETTING_SSR_PYTHON_DIR": "ssr python 目录",
   "UI_SETTING_SELECT_SSR_PYTHON_DIR": "选择ssr目录",
   "UI_SETTING_AUTO_START": "自动启动",
@@ -32,6 +34,9 @@
   "UI_SETTING_ENABLE_HTTP_PORT": "启用HTTP代理",
   "UI_SETTING_SSR_INPUT_PLACEHOLDER": "请选择shadowsocks目录",
 
+  "UI_SETTING_SHORTCUT_TOGGLE_VISI": "切换窗口显隐",
+  "UI_SETTING_SHORTCUT_CHANGE_SYS_PROXY": "切换系统代理模式",
+  "UI_SETTING_SHORTCUT_REGISTED":"快捷键 {shortcutStr} 已被注册，请更换.",
   "UI_DONE":"完成",
   "UI_BACK":"返回",
 
@@ -72,5 +77,14 @@
   "UI_CLICK_TO_RETRY":"点击重试",
   "UI_PLEASE_SELECT_SS_FOLDER":"请选择shadowsocks目录",
   "UI_INCORRECT_FOLDER":"该目录不正确，请重新选择",
-  "UI_DOWNLOADING_FOR_YOU":"正在为您下载"
+  "UI_DOWNLOADING_FOR_YOU":"正在为您下载",
+  
+
+  "NOTI_FAILED_TO_FIND_QRCODE": "未找到相关二维码",
+  "NOTI_TYPE_ERROR_QRCODE": "扫码失败",
+  "NOTI_SUCC_ADD_CONFIGS":"已成功添加{count}条记录",
+  "NOTI_SUB_SUCC_UPDATE_COUNT":"服务器订阅更新成功，共更新了{count}个节点",
+  "NOTI_SUB_SUCC_UPDATE_NO_COUNT":"服务器订阅更新完成，没有新节点",
+  "NOTI_SUB_FAIL_UPDATE": "服务器订阅更新失败",
+  "NOTI":"通知"
 }

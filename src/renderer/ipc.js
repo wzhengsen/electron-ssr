@@ -4,7 +4,9 @@ import { showNotification, showHtmlNotification } from './notification'
 import scanQrcode from './qrcode/scan-screenshot'
 import * as events from '../shared/events'
 import { loadConfigsFromString } from '../shared/ssr'
-
+import i18n from './i18n'
+// const $t = i18n.t
+console.log(i18n.t('NOTI_SUB_FAIL_UPDATE'))
 /**
  * ipc-render事件
  */
@@ -16,12 +18,12 @@ export function register () {
     // 扫描二维码
     scanQrcode((e, result) => {
       if (e) {
-        showNotification('未找到相关二维码', '扫码失败')
+        showNotification(i18n.t('NOTI_FAILED_TO_FIND_QRCODE'), i18n.t('NOTI_TYPE_ERROR_QRCODE'))
       } else {
         const configs = loadConfigsFromString(result)
         if (configs.length) {
           store.dispatch('addConfigs', configs)
-          showNotification(`已成功添加${configs.length}条记录`)
+          showNotification(i18n.t('NOTI_SUCC_ADD_CONFIGS', { count: configs.length }))
         }
       }
     })
@@ -36,12 +38,12 @@ export function register () {
     // 更新订阅服务器
     store.dispatch('updateSubscribes').then(updatedCount => {
       if (updatedCount > 0) {
-        showNotification(`服务器订阅更新成功，共更新了${updatedCount}个节点`)
+        showNotification(i18n.t('NOTI_SUB_SUCC_UPDATE_COUNT', { count: updatedCount }))
       } else {
-        showNotification(`服务器订阅更新完成，没有新节点`)
+        showNotification(i18n.t('NOTI_SUB_SUCC_UPDATE_NO_COUNT'))
       }
     }).catch(() => {
-      showNotification('服务器订阅更新失败')
+      showNotification(i18n.t('NOTI_SUB_FAIL_UPDATE'))
     })
   }).on(events.EVENT_RX_SYNC_MAIN, (e, appConfig) => {
     // 同步数据

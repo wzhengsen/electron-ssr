@@ -31,7 +31,7 @@ import qr from 'qr-image'
 import clickoutside from 'iview/src/directives/clickoutside'
 import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
 import { getSSLink, getSSRLink } from '@/shared/ssr'
-import { merge } from '../../../shared/utils'
+import { merge } from '@/shared/utils'
 
 const COPY_TOOLTIP = '点击复制链接'
 const COPY_TOOLTIP_COPIED = '链接已复制'

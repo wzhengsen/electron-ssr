@@ -3,13 +3,13 @@
     <i-form ref="form" class="mt-1" :model="form" :label-width="0">
       <i-form-item v-for="(funcText,funcName) in globalShortcutMaps" :key="funcName">
         <i-row type="flex" :gutter="24">
-          <i-col :span="5">
+          <i-col :span="6">
             <i-checkbox v-model="form.globalShortcuts[funcName].enable"
               @on-change="update('globalShortcuts', funcName)">
               {{funcText}}
             </i-checkbox>
           </i-col>
-          <i-col :span="8">
+          <i-col :span="6">
             <i-input v-model="form.globalShortcuts[funcName].key"
               readonly :disabled="!form.globalShortcuts[funcName].enable"
               @on-keydown="e=>keydown(e,'globalShortcuts', funcName)"
@@ -23,8 +23,8 @@
 <script>
 import { remote } from 'electron'
 import { mapActions } from 'vuex'
-import { debounce } from '../../../shared/utils'
-import { isLinux } from '../../../shared/env'
+import { debounce } from '@/shared/utils'
+import { isLinux } from '@/shared/env'
 
 const globalShortcut = remote.globalShortcut
 
@@ -33,16 +33,20 @@ export default {
     const appConfig = this.$store.state.appConfig
     return {
       isLinux,
-      globalShortcutMaps: {
-        toggleWindow: '切换窗口显隐',
-        switchSystemProxy: '切换系统代理模式'
-      },
       form: {
         globalShortcuts: appConfig.globalShortcuts,
         windowShortcuts: appConfig.windowShortcuts
       },
       funcKeys: new Set(),
       actionKey: ''
+    }
+  },
+  computed: {
+    globalShortcutMaps () {
+      return {
+        toggleWindow: this.$t('UI_SETTING_SHORTCUT_TOGGLE_VISI'),
+        switchSystemProxy: this.$t('UI_SETTING_SHORTCUT_CHANGE_SYS_PROXY')
+      }
     }
   },
   methods: {
@@ -79,7 +83,7 @@ export default {
         // 全局快捷键的判断
         if (parent === 'globalShortcuts') {
           if (globalShortcut.isRegistered(shortcutStr)) {
-            return this.$message.error(`快捷键 ${shortcutStr} 已被注册，请更换`)
+            return this.$message.error(this.$t('UI_SETTING_SHORTCUT_REGISTED', { shortcutStr }))
           }
         }
         this.form[parent][field].key = shortcutStr

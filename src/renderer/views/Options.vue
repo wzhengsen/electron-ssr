@@ -10,7 +10,7 @@
       <i-tab-pane :label="$t('UI_SETTING_SUBSCRIPTION')" name="subscribes">
         <option-subscribe></option-subscribe>
       </i-tab-pane>
-      <i-tab-pane label="快捷键管理" name="shortcuts">
+      <i-tab-pane :label="$t('UI_SETTING_SHORTCUT')" name="shortcuts">
         <option-shortcut></option-shortcut>
       </i-tab-pane>
     </i-tabs>
