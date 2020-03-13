@@ -68,7 +68,7 @@ export async function setProxyToNone (force = true) {
 export async function setProxyToGlobal (host, port) {
   let command
   if (isWin && await pathExists(winToolPath)) {
-    command = `${winToolPath} global ${host}:${port}`
+    command = `${winToolPath} global ${host}:${port} "localhost;127.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;192.168.*;<local>"`
   } else if (isMac && await pathExists(macToolPath) && !await isOldMacVersion) {
     command = `"${macToolPath}" -m global -p ${port}`
   } else if (isLinux && await isGsettingsAvaliable) {
@@ -98,7 +98,7 @@ async function setProxyByMode (mode) {
   } else if (mode === 1) {
     await setProxyToPac(`http://127.0.0.1:${currentConfig.pacPort}/proxy.pac`)
   } else if (mode === 2) {
-    await setProxyToGlobal('127.0.0.1', currentConfig.localPort)
+    await setProxyToGlobal('127.0.0.1', currentConfig.preferHTTPGlobal ? currentConfig.httpProxyPort : currentConfig.localPort)
   }
 }
 
@@ -116,6 +116,9 @@ export function startProxy (mode) {
   if (mode === undefined) {
     mode = currentConfig.sysProxyMode
   }
+  if (isWin && mode === 2 && currentConfig.preferHTTPGlobal === 1 && !currentConfig.httpProxyEnable) {
+    updateAppConfig({ httpProxyEnable: true })
+  }
   setProxyByMode(mode)
 }
 
@@ -129,7 +132,7 @@ appConfig$.subscribe(data => {
       if (appConfig.sysProxyMode === 1 && (changed.indexOf('pacPort') > -1 || changed.indexOf('enable') > -1)) {
         // pacPort changes or enable changed
         startProxy(1)
-      } else if (appConfig.sysProxyMode === 2 && (changed.indexOf('localPort') > -1 || changed.indexOf('enable') > -1)) {
+      } else if (appConfig.sysProxyMode === 2 && (changed.indexOf('localPort') > -1 || changed.indexOf('enable') > -1 || changed.indexOf('preferHTTPGlobal') > -1)) {
         startProxy(2)
       }
     }

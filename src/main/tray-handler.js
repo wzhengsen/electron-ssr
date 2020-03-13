@@ -1,4 +1,4 @@
-import { app, shell, clipboard } from 'electron'
+import { app, shell, clipboard, dialog } from 'electron'
 import { readJson, writeJson } from 'fs-extra'
 import path from 'path'
 import sudo from 'sudo-prompt'
@@ -11,7 +11,6 @@ import { startProxy } from './proxy'
 import { showNotification } from './notification'
 import * as events from '../shared/events'
 import { loadConfigsFromString } from '../shared/ssr'
-import { chooseFile, chooseSavePath } from '../shared/dialog'
 import * as i18n from './locales'
 const $t = i18n.default
 export { openDevtool } from './window'
@@ -21,7 +20,6 @@ export { updateSubscribes } from './subscribe'
 export function toggleEnable () {
   updateAppConfig({ enable: !currentConfig.enable })
 }
-
 // 切换代理方式
 export function toggleProxy (mode) {
   startProxy(mode)
@@ -48,26 +46,31 @@ export function scanQRCode () {
   sendData(events.EVENT_APP_SCAN_DESKTOP)
 }
 
-// 打开选项设置页面
 export function openOptionsWindow () {
   sendData(events.EVENT_APP_SHOW_PAGE, 'Options')
 }
 
-// 导入配置文件
-export function importConfigFromFile () {
-  const _path = chooseFile('选择gui-config.json', [{ name: 'Json', extensions: ['json'] }])
-  if (_path) {
-    readJson(_path).then(fileConfig => {
+export async function importConfigFromFile () {
+  const result = await dialog.showOpenDialog({
+    title: 'Open from',
+    properties: ['openFile'],
+    filters: [{ name: 'Json', extensions: ['json'] },
+      { name: 'All', extensions: ['*'] }]
+  })
+  if (result.filePaths.length === 1) {
+    readJson(result.filePaths[0]).then(fileConfig => {
       updateAppConfig(fileConfig, false, true)
-    }).catch(() => {})
+    }).catch(() => { })
   }
 }
 
-// 导出配置文件
-export function exportConfigToFile () {
-  const _path = chooseSavePath('选择导出的目录')
-  if (_path) {
-    writeJson(path.join(_path, 'gui-config.json'), currentConfig, { spaces: '\t' })
+export async function exportConfigToFile () {
+  const result = await dialog.showOpenDialog({
+    title: 'Save to',
+    properties: ['openDirectory']
+  })
+  if (result.filePaths.length === 1) {
+    writeJson(path.join(result.filePaths[0], 'gui-config.json'), currentConfig, { spaces: '\t' })
   }
 }
 

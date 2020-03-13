@@ -43,7 +43,8 @@ const defaultConfig = {
   subscribeUpdateInterval: 24,
   lang: 'en-US',
   isMacToolInstalled: false,
-  noMacToolInstall: false
+  noMacToolInstall: false,
+  preferHTTPGlobal: -1
 }
 
 export default defaultConfig

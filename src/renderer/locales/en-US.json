@@ -33,6 +33,7 @@
   "UI_SETTING_HTTP_PORT": "Http Proxy Port",
   "UI_SETTING_ENABLE_HTTP_PORT": "Enable Http Proxy",
   "UI_SETTING_SSR_INPUT_PLACEHOLDER": "Please select shadowsocks Dir",
+  "UI_SETTING_PREFER_HTTP":"Use Http as Global",
   "UI_SETTING_SHORTCUT_TOGGLE_VISI": "Toggle Windows",
   "UI_SETTING_SHORTCUT_CHANGE_SYS_PROXY": "Change Sys Proxy Mode",
   "UI_SETTING_SHORTCUT_REGISTED":"Shortcut {shortcutStr} has been registered.",
