@@ -1,4 +1,4 @@
-import { isLinux } from './env'
+import { isLinux, isWin } from './env'
 
 const defaultConfig = {
   // 配置集合
@@ -22,8 +22,6 @@ const defaultConfig = {
   sysProxyMode: 0,
   // 订阅列表
   serverSubscribes: [],
-  // 是否开启http proxy
-  httpProxyEnable: false,
   // 全局快捷键
   globalShortcuts: {
     toggleWindow: {
@@ -44,7 +42,7 @@ const defaultConfig = {
   lang: 'en-US',
   isMacToolInstalled: false,
   noMacToolInstall: false,
-  preferHTTPGlobal: -1
+  preferHTTPGlobal: isWin ? 1 : -1
 }
 
 export default defaultConfig

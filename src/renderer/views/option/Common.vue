@@ -20,9 +20,6 @@
         <i-form-item class="flex"  :label="$t('UI_SETTING_SHARE_LAN')">
           <i-checkbox v-model="form.shareOverLan" @on-change="update('shareOverLan')" />
         </i-form-item>
-        <i-form-item class="flex" :label="$t('UI_SETTING_ENABLE_HTTP_PORT')">
-          <i-checkbox v-model="form.httpProxyEnable" @on-change="update('httpProxyEnable')" />
-        </i-form-item>
       </div>
       <div class="flex flex-jc-between">
         <i-form-item class="flex" :label="$t('UI_SETTING_PAC_PORT')">
@@ -50,7 +47,7 @@
           />
         </i-form-item>
         <i-form-item class="flex" :label="$t('UI_SETTING_PREFER_HTTP')">
-          <i-checkbox v-model="form.preferHTTPGlobal" @on-change="update('preferHTTPGlobal')" />
+          <i-checkbox v-model="form.preferHTTPGlobal" :disabled="diabledPreferSwitch" @on-change="update('preferHTTPGlobal')" />
         </i-form-item>
       </div>
       <i-form-item prop="lang" label="Language">
@@ -67,6 +64,7 @@ import { mapActions } from 'vuex'
 import { isSSRPathAvaliable, debounce } from '@/shared/utils'
 import { openDialog } from '@/renderer/ipc'
 import i18n from '@/renderer/i18n'
+import { isWin } from '@/shared/env'
 export default {
   data () {
     const appConfig = this.$store.state.appConfig
@@ -78,10 +76,9 @@ export default {
         shareOverLan: appConfig.shareOverLan,
         localPort: appConfig.localPort,
         pacPort: appConfig.pacPort,
-        httpProxyEnable: appConfig.httpProxyEnable,
         httpProxyPort: appConfig.httpProxyPort,
         lang: appConfig.lang,
-        preferHTTPGlobal: appConfig.preferHTTPGlobal === 1
+        preferHTTPGlobal: isWin ? true : appConfig.preferHTTPGlobal === 1
       },
       rules: {
         ssrPath: [
@@ -98,7 +95,8 @@ export default {
             }
           }
         ]
-      }
+      },
+      diabledPreferSwitch: isWin
     }
   },
   watch: {

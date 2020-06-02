@@ -18,7 +18,7 @@ let socks2httpInstance
  * @param {Object} appConfig 应用配置
  */
 async function startHttpProxyServer (appConfig, isProxyStarted) {
-  if (isProxyStarted && appConfig.httpProxyEnable) {
+  if (isProxyStarted) {
     const host = appConfig.shareOverLan ? '0.0.0.0' : '127.0.0.1'
     try {
       await ensureHostPortValid(host, appConfig.httpProxyPort)
@@ -87,7 +87,7 @@ appConfig$.subscribe(data => {
     startHttpProxyServer(appConfig, isProxyStarted)
   } else {
     // 数据变更
-    if (['shareOverLan', 'httpProxyEnable', 'httpProxyPort'].some(key => changed.indexOf(key) > -1) || isProxyStarted !== isOldProxyStarted) {
+    if (['shareOverLan', 'httpProxyPort'].some(key => changed.indexOf(key) > -1) || isProxyStarted !== isOldProxyStarted) {
       stopHttpProxyServer().then(() => {
         startHttpProxyServer(appConfig, isProxyStarted)
       })

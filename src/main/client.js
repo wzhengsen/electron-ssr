@@ -9,7 +9,7 @@ import { isConfigEqual } from '../shared/utils'
 import { showNotification } from './notification'
 import { toggleEnable } from './tray-handler'
 import * as i18n from './locales'
-import { isWin } from '@/shared/env'
+import { isWin, pythonName } from '@/shared/env'
 const $t = i18n.default
 let quitByCommand = false
 /**
@@ -22,7 +22,7 @@ let pythonSSRInstance
  * @param {string[]} params 待执行的shell命令
  */
 function runPythonSSR (params) {
-  let command = 'python'
+  let command = pythonName
   const commandStr = `${command} ${params.join(' ')}`
   logger.info('run command: %s', commandStr.replace(/-k [\d\w]* /, '-k ****** '))
   if (isWin) {

@@ -16,10 +16,8 @@ const $t = i18n.default
 let pacServer
 
 httpShutdown.extend()
-
-/**
- * 下载pac文件
- */
+const replacePac = (str) => str.replace(/__PROXY__/g,
+  `SOCKS5 127.0.0.1:${currentConfig.localPort}; SOCKS 127.0.0.1:${currentConfig.localPort}; PROXY 127.0.0.1:${currentConfig.localPort}; PROXY 127.0.0.1:${currentConfig.httpProxyPort}; DIRECT`)
 export async function downloadPac (force = false) {
   await bootstrapPromise
   const pacExisted = await pathExists(pacRawPath)
@@ -33,13 +31,12 @@ export async function downloadPac (force = false) {
     // always gen pac from raw
     pac = (await readFile(pacRawPath)).toString()
   }
-  pac = pac.replace(/__PROXY__/g,
-    `SOCKS5 127.0.0.1:${currentConfig.localPort}; SOCKS 127.0.0.1:${currentConfig.localPort}; PROXY 127.0.0.1:${currentConfig.localPort}; ${currentConfig.httpProxyEnable ? 'PROXY 127.0.0.1:' + currentConfig.httpProxyPort + ';' : ''} DIRECT`)
+  pac = replacePac(pac)
   await writeFile(pacPath, pac)
 }
 async function updatePacProxy () {
   let content = (await readFile(pacRawPath)).toString()
-  content = content.replace(/__PROXY__/g, `SOCKS5 127.0.0.1:${currentConfig.localPort}; SOCKS 127.0.0.1:${currentConfig.localPort}; PROXY 127.0.0.1:${currentConfig.localPort}; ${currentConfig.httpProxyEnable ? 'PROXY 127.0.0.1:' + currentConfig.httpProxyPort + ';' : ''} DIRECT`)
+  content = replacePac(content)
   await writeFile(pacPath, content)
 }
 let ensurePacPromise = null
@@ -125,7 +122,7 @@ appConfig$.subscribe(data => {
         serverPac(appConfig, isProxyStarted)
       })
     }
-    if (['localPort', 'httpProxyEnable', 'httpProxyPort'].some(key => changed.indexOf(key) > -1)) {
+    if (['localPort', 'httpProxyPort'].some(key => changed.indexOf(key) > -1)) {
       console.log('Ported UPdated')
       updatePacProxy()
     }

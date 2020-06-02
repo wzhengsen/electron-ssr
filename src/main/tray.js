@@ -1,5 +1,5 @@
-import { Menu, nativeImage, Tray, dialog } from 'electron'
-import { appConfig$, updateAppConfig } from './data'
+import { Menu, nativeImage, Tray } from 'electron'
+import { appConfig$ } from './data'
 import * as handler from './tray-handler'
 import { groupConfigs } from '@/shared/utils'
 import { isMac, isWin, isOldMacVersion } from '../shared/env'
@@ -121,20 +121,6 @@ export function changeProxy (e, mode, appConfig) {
   if (mode === appConfig.sysProxyMode) {
     e.checked = true
   } else {
-    if (isWin && mode === 2 && appConfig.preferHTTPGlobal === -1) {
-      dialog.showMessageBox({
-        title: $t('MENU_SUB_GLOBAL_PROXY'),
-        message: $t('NOTO_WIND_GLOBAL_PROXY'),
-        buttons: ['Yes', 'No'],
-        type: 'info'
-      }).then((response) => {
-        if (response.response === 0) {
-          updateAppConfig({ preferHTTPGlobal: 1 })
-        } else {
-          updateAppConfig({ preferHTTPGlobal: 0 })
-        }
-      })
-    }
     handler.toggleProxy(mode)
   }
 }
