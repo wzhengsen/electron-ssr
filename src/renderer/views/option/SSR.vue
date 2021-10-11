@@ -1,23 +1,23 @@
 <template>
   <div class="options-container px-2 pb-2 scroll-y">
-    <i-alert v-if="showTip" type="info" closable @on-close="closeTip">双击可修改，修改后回车可保存，esc可取消修改。</i-alert>
+    <i-alert v-if="showTip" type="info" closable @on-close="closeTip">{{$t('UI_SETTING_SSR_TIP')}}</i-alert>
     <fieldset class="px-1 py-1">
-      <legend class="ml-1">SSR加密方法</legend>
+      <legend class="ml-1">{{$t('UI_SETTING_SSR_ENCRYPT_METHOD')}}</legend>
       <edit-tag v-for="method in methods" :key="method" :name="method"
         @on-close="removeMethod" @on-update="v => updateMethod(method, v)"></edit-tag>
-      <i-input v-model="method" class="create-input" placeholder="输入后回车可新增" size="small" @keyup.enter.native="addMethod" icon="plus"/>
+      <i-input v-model="method" class="create-input" :placeholder="$t('UI_RETURN_TO_CREATE')" size="small" @keyup.enter.native="addMethod" icon="plus"/>
     </fieldset>
     <fieldset class="mt-2 px-1 py-1">
-      <legend class="ml-1">SSR协议</legend>
+      <legend class="ml-1">{{$t('UI_SETTING_SSR_PROTO')}}</legend>
       <edit-tag v-for="protocol in protocols" :key="protocol" :name="protocol"
         @on-close="removeProtocol" @on-update="v => updateProtocol(protocol, v)"></edit-tag>
-      <i-input v-model="protocol" class="create-input" placeholder="输入后回车可新增" size="small" @keyup.enter.native="addProtocol" icon="plus"/>
+      <i-input v-model="protocol" class="create-input" :placeholder="$t('UI_RETURN_TO_CREATE')" size="small" @keyup.enter.native="addProtocol" icon="plus"/>
     </fieldset>
     <fieldset class="mt-2 px-1 py-1">
-      <legend class="ml-1">SSR混淆</legend>
+      <legend class="ml-1">{{$t('UI_SETTING_SSR_OBFS')}}</legend>
       <edit-tag v-for="obfs in obfses" :key="obfs" :name="obfs"
         @on-close="removeObfs" @on-update="v => updateObfs(obfs, v)"></edit-tag>
-      <i-input v-model="obfs" class="create-input" placeholder="输入后回车可新增" size="small" @keyup.enter.native="addObfs" icon="plus"/>
+      <i-input v-model="obfs" class="create-input" :placeholder="$t('UI_RETURN_TO_CREATE')" size="small" @keyup.enter.native="addObfs" icon="plus"/>
     </fieldset>
   </div>
 </template>

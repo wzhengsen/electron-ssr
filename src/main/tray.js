@@ -1,11 +1,12 @@
 import { Menu, nativeImage, Tray } from 'electron'
 import { appConfig$ } from './data'
 import * as handler from './tray-handler'
-import { checkUpdate } from './updater'
-import { groupConfigs } from '../shared/utils'
-import { isMac, isOldMacVersion, isWin } from '../shared/env'
+import { groupConfigs } from '@/shared/utils'
+import { isMac, isWin, isOldMacVersion } from '../shared/env'
 import { disabledTray, enabledHighlightTray, enabledTray, globalHighlightTray, globalTray, pacHighlightTray, pacTray } from '../shared/icon'
-
+import * as i18n from './locales'
+import bootstrap from './bootstrap'
+const $t = i18n.default
 let tray
 
 /**
@@ -42,9 +43,9 @@ function generateConfigSubmenus (configs, selectedIndex) {
     submenus.push({ label: 'none', enabled: false })
   }
   submenus.push({ type: 'separator' })
-  submenus.push({ label: '编辑服务器', click: handler.showManagePanel })
-  submenus.push({ label: '订阅管理', click: handler.showSubscribes })
-  submenus.push({ label: '更新订阅服务器', click: handler.updateSubscribes })
+  submenus.push({ label: $t('TRAY_EDIT_SERVER'), click: handler.showManagePanel })
+  submenus.push({ label: $t('TRAY_SUB_SETTINGS'), click: handler.showSubscribes })
+  submenus.push({ label: $t('TRAY_UPDATE_SUB_LINK'), click: handler.updateSubscribes })
   return submenus
 }
 
@@ -52,44 +53,65 @@ function generateConfigSubmenus (configs, selectedIndex) {
  * 根据应用配置生成菜单
  * @param {Object} appConfig 应用配置
  */
-function generateMenus (appConfig) {
+async function generateMenus (appConfig) {
+  i18n.setLocal(appConfig.lang || 'en-US')
+  let menuHelp = {
+    label: $t('MENU_HELP'),
+    submenu: [
+      { label: $t('MENU_SUB_DEVS_INSPECT_LOG'), click: handler.openLog }
+    ]
+  }
   const base = [
-    { label: '主界面', click: handler.showManagePanel },
-    { label: '开启应用', type: 'checkbox', checked: appConfig.enable, click: () => {
-      handler.toggleEnable()
-      handler.toggleProxy(appConfig.sysProxyMode)
-    } },
-    { label: 'PAC', submenu: [
-      { label: '更新PAC', click: handler.updatePac }
-    ] },
-    { label: '服务器', submenu: generateConfigSubmenus(appConfig.configs, appConfig.index) },
-    { label: '二维码扫描', click: handler.scanQRCode },
-    { label: '配置', submenu: [
-      { label: '选项设置...', click: handler.showOptions },
-      { label: '导入gui-config.json文件', click: handler.importConfigFromFile },
-      { label: '导出gui-config.json文件', click: handler.exportConfigToFile },
-      { label: '从剪贴板批量导入ssr://地址', click: handler.importConfigFromClipboard },
-      { label: '打开配置文件', click: handler.openConfigFile }
-    ] },
-    { label: '复制http代理设置', click: handler.copyHttpProxyCode },
-    { label: '帮助', submenu: [
-      { label: '检查更新', click: () => checkUpdate(true) },
-      { label: '查看日志', click: handler.openLog },
-      // { label: '项目主页', click: () => { handler.openURL('https://github.com/shadowsocksrr/electron-ssr') } },
-      // { label: 'Bug反馈', click: () => { handler.openURL('https://github.com/shadowsocksrr/electron-ssr/issues') } },
-      // { label: '捐赠', click: () => { handler.openURL('https://github.com/erguotou520/donate') } },
-      { label: '打开开发者工具', click: handler.openDevtool }
-    ] },
-    { label: '退出', click: handler.exitApp }
+    { label: $t('TRAY_MAIN_PAGE'), click: handler.showManagePanel },
+    {
+      label: $t('MENU_SUB_ENABLE_APP'),
+      type: 'checkbox',
+      checked: appConfig.enable,
+      click: () => {
+        handler.toggleEnable()
+        handler.toggleProxy(appConfig.sysProxyMode)
+      }
+    },
+    { label: $t('MENU_SUB_COPY_HTTP_PROXY'), click: handler.copyHttpProxyCode },
+    {
+      label: $t('MENU_PAC'),
+      submenu: [
+        { label: $t('MENU_SUB_UPDATE_PAC'), click: handler.updatePac }
+      ]
+    },
+    { label: $t('TRAY_SERVERS'), submenu: generateConfigSubmenus(appConfig.configs, appConfig.index) },
+    { label: $t('MENU_SUB_ADD_FROM_QR_SCAN'), click: handler.scanQRCode },
+    {
+      label: $t('MENU_SETTINGS'),
+      submenu: [
+        { label: $t('MENU_SUB_SETTING_OPTIONS'), click: handler.showOptions },
+        { label: $t('MENU_SUB_LOAD_CF'), click: handler.importConfigFromFile },
+        { label: $t('MENU_SUB_EXPORT_CF'), click: handler.exportConfigToFile },
+        { label: $t('MENU_SUB_ADD_FROM_CB'), click: handler.importConfigFromClipboard },
+        { label: $t('MENU_SUB_OPEN_CF'), click: handler.openConfigFile }
+      ]
+    },
+    menuHelp,
+    { role: 'quit' }
   ]
-  if (!isOldMacVersion) {
+  let macToolPathExist = appConfig['isMacToolInstalled']
+  if (!isMac || (!await isOldMacVersion && macToolPathExist)) {
     base.splice(1, 0,
-      { label: '系统代理模式        ', submenu: [
-        { label: '不启用代理', type: 'checkbox', checked: appConfig.sysProxyMode === 0, click: e => changeProxy(e, 0, appConfig) },
-        { label: 'PAC代理', type: 'checkbox', checked: appConfig.sysProxyMode === 1, click: e => changeProxy(e, 1, appConfig) },
-        { label: '全局代理', type: 'checkbox', checked: appConfig.sysProxyMode === 2, click: e => changeProxy(e, 2, appConfig) }
-      ] }
+      {
+        label: $t('MENU_SYS_PROXY_MODE'),
+        submenu: [
+          { label: $t('MENU_SUB_NO_PROXY'), type: 'checkbox', checked: appConfig.sysProxyMode === 0, click: e => changeProxy(e, 0, appConfig) },
+          { label: $t('MENU_SUB_PAC_PROXY'), type: 'checkbox', checked: appConfig.sysProxyMode === 1, click: e => changeProxy(e, 1, appConfig) },
+          { label: $t('MENU_SUB_GLOBAL_PROXY'), type: 'checkbox', checked: appConfig.sysProxyMode === 2, click: e => changeProxy(e, 2, appConfig) }
+        ]
+      }
     )
+  }
+  if (!await isOldMacVersion && isMac) {
+    menuHelp.submenu.push({
+      label: 'Install Help Tool',
+      click: handler.installMacHelpToolTray
+    })
   }
   return base
 }
@@ -120,10 +142,10 @@ function getTooltip (appConfig) {
   } else if (appConfig.sysProxyMode === 2) {
     arr.push('全局代理')
   }
-  const selectedConfig = appConfig.configs[appConfig.index]
-  if (selectedConfig) {
+  const activatedConfig = appConfig.configs[appConfig.index]
+  if (activatedConfig) {
     arr.push('\n')
-    arr.push(`${selectedConfig.group ? selectedConfig.group + ' - ' : ''}${selectedConfig.remarks || (selectedConfig.server + ':' + selectedConfig.server_port)}`)
+    arr.push(`${activatedConfig.group ? activatedConfig.group + ' - ' : ''}${activatedConfig.remarks || (activatedConfig.server + ':' + activatedConfig.server_port)}`)
   }
   return arr.join('')
 }
@@ -132,8 +154,8 @@ function getTooltip (appConfig) {
  * 更新任务栏菜单
  * @param {Object} appConfig 应用配置
  */
-function updateTray (appConfig) {
-  const menus = generateMenus(appConfig)
+async function updateTray (appConfig) {
+  const menus = await generateMenus(appConfig)
   const contextMenu = Menu.buildFromTemplate(menus)
   tray.setContextMenu(contextMenu)
   tray.setToolTip(getTooltip(appConfig))
@@ -161,7 +183,8 @@ function setTrayIcon (appConfig) {
 /**
  * 渲染托盘图标和托盘菜单
  */
-export default function renderTray (appConfig) {
+async function renderTray (appConfig) {
+  await bootstrap
   // 生成tray
   tray = new Tray(nativeImage.createEmpty())
   updateTray(appConfig)
@@ -184,7 +207,7 @@ appConfig$.subscribe(data => {
   if (!changed.length) {
     renderTray(appConfig)
   } else {
-    if (['configs', 'index', 'enable', 'sysProxyMode'].some(key => changed.indexOf(key) > -1)) {
+    if (['configs', 'index', 'enable', 'sysProxyMode', 'isMacToolInstalled'].some(key => changed.indexOf(key) > -1)) {
       updateTray(appConfig)
     }
     if (['enable', 'sysProxyMode'].some(key => changed.indexOf(key) > -1)) {

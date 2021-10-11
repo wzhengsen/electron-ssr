@@ -5,7 +5,7 @@ import { toggleWindow, showWindow, sendData } from './window'
 import { appConfig$ } from './data'
 import { showNotification } from './notification'
 import { EVENT_APP_SHOW_PAGE } from '../shared/events'
-
+import $t from './locales'
 const func = {
   toggleWindow,
   switchSystemProxy
@@ -70,7 +70,7 @@ app.on('ready', () => {
         return false
       })
       if (failed.length) {
-        showNotification(`检测到${failed.length}个全局快捷键注册失败，请在快捷键页面重新设置`, '错误', () => {
+        showNotification($t('NOTI_SHORTCUT_REGISTERED', { length: failed.length }), $t('NOTI_TYPE_ERROR'), () => {
           showWindow()
           sendData(EVENT_APP_SHOW_PAGE, { page: 'Options', tab: 'shortcuts' })
         })
@@ -90,4 +90,3 @@ app.on('ready', () => {
     }
   })
 })
-

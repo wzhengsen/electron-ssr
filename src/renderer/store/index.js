@@ -1,29 +1,27 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import defaultConfig from '../../shared/config'
+import defaultConfig from '@/shared/config'
 import {
   merge,
   clone,
-  request,
   isSubscribeContentValid,
   getUpdatedKeys,
-  isConfigEqual,
-  somePromise
-} from '../../shared/utils'
-import Config from '../../shared/ssr'
+  isConfigEqual
+} from '@/shared/utils'
+import { defaultSSRConfig } from '@/shared/ssr'
 import { syncConfig } from '../ipc'
 import { STORE_KEY_FEATURE, STORE_KEY_SSR_METHODS, STORE_KEY_SSR_PROTOCOLS, STORE_KEY_SSR_OBFSES } from '../constants'
-
+import i18n from '@/renderer/i18n'
 Vue.use(Vuex)
 
 // 当前编辑的配置项
-const editingConfig = new Config()
+const editingConfig = defaultSSRConfig()
 // ssr config 有效key
 const configKeys = Object.keys(editingConfig)
 // 页面
 const views = ['Feature', 'Setup', 'ManagePanel', 'Options']
 // 编辑组的名称
-let groupTitleBak = ''
+// let groupTitleBak = ''
 // 功能页面是否已展示过
 const ls = window.localStorage
 const featureReaded = !!ls.getItem(STORE_KEY_FEATURE)
@@ -102,6 +100,14 @@ if (storedObfses) {
   ls.setItem(STORE_KEY_SSR_OBFSES, JSON.stringify(obfses))
 }
 
+function cloneConfig (config) {
+  return {
+    // (${config.server}:${config.server_port})
+    title: `${config.remarks || config.server}`,
+    ...config
+  }
+}
+
 export default new Vuex.Store({
   state: {
     appConfig: defaultConfig,
@@ -117,8 +123,11 @@ export default new Vuex.Store({
     },
     editingConfig,
     // 备份当前选中的配置项
-    editingConfigBak: new Config(),
-    editingGroup: { show: false, title: '', updated: false },
+    editingConfigBak: {},
+    editingGroup: { show: false, title: '', updated: false, editingTitle: '' },
+    selection: {
+      selectedConfigId: ''
+    },
     methods,
     protocols,
     obfses
@@ -157,13 +166,19 @@ export default new Vuex.Store({
       state.view.page = views[views.indexOf(state.view.page) + 1]
     },
     // 设置选中的配置
-    setCurrentConfig (state, ssrConfig) {
+    setEditingConfig (state, ssrConfig) {
       merge(state.editingConfig, ssrConfig)
       merge(state.editingConfigBak, ssrConfig)
+    },
+    setSelectedConfigId (state, id) {
+      state.selection.selectedConfigId = id
     },
     // 更新编辑项备份
     updateEditingBak (state) {
       merge(state.editingConfigBak, state.editingConfig)
+    },
+    updateEditingTitle (state, title) {
+      state.editingGroup.editingTitle = title
     },
     // 重置状态
     resetState (state) {
@@ -173,12 +188,11 @@ export default new Vuex.Store({
         tab: 'common',
         active: false
       })
-      state.editingGroup.title = groupTitleBak
     },
     // 更新当前编辑的组
     updateEditingGroup (state, newGroup) {
       merge(state.editingGroup, newGroup)
-      groupTitleBak = newGroup.title
+      state.editingGroup.editingTitle = state.editingGroup.title
     },
     // 更新编辑项
     updateEditing (state, config) {
@@ -206,16 +220,22 @@ export default new Vuex.Store({
       }
       const initialSelected = config.configs[config.index]
       if (initialSelected) {
-        commit('setCurrentConfig', initialSelected)
+        commit('setEditingConfig', initialSelected)
       }
       if (config.ssrPath) {
         commit('updateView', { page: views[2] })
       }
+      if (initialSelected) {
+        commit('setSelectedConfigId', initialSelected.id)
+      }
+      if (config.lang) {
+        i18n.locale = config.lang
+      }
     },
     updateConfig ({ getters, commit }, targetConfig) {
       let index
-      if (targetConfig.configs && getters.selectedConfig) {
-        index = targetConfig.configs.findIndex(config => config.id === getters.selectedConfig.id)
+      if (targetConfig.configs && getters.activatedConfig) {
+        index = targetConfig.configs.findIndex(config => config.id === getters.activatedConfig.id)
       }
       const correctConfig = (index !== undefined && index > -1) ? { ...targetConfig, index } : targetConfig
       commit('updateConfig', [correctConfig, true])
@@ -239,14 +259,19 @@ export default new Vuex.Store({
       }
     },
     // 更新所有订阅服务器
-    updateSubscribes ({ state, dispatch }, updateSubscribes) {
+    async updateSubscribes ({ state, dispatch }, updateSubscribes) {
       // 要更新的订阅服务器
       updateSubscribes = updateSubscribes || state.appConfig.serverSubscribes
       // 累计更新节点数
       let updatedCount = 0
-      return Promise.all(updateSubscribes.map(subscribe => {
-        return somePromise([request(subscribe.URL, true), fetch(subscribe.URL).then(res => res.text())]).then(res => {
-          const [groupCount, groupConfigs] = isSubscribeContentValid(res)
+      const updatedArr = []
+      const failedArr = []
+      await Promise.all(updateSubscribes.map(async subscribe => {
+        try {
+          const res = await fetch(subscribe.URL)
+          updatedArr.push(subscribe.URL)
+          const textContent = await res.text()
+          const [groupCount, groupConfigs] = isSubscribeContentValid(textContent)
           if (groupCount > 0) {
             for (const groupName in groupConfigs) {
               const configs = groupConfigs[groupName]
@@ -280,14 +305,99 @@ export default new Vuex.Store({
               }
             }
           }
-        })
-      })).then(() => {
-        return updatedCount
-      })
+        } catch (error) {
+          failedArr.push(subscribe.URL)
+        }
+      }))
+      return { updatedCount, updatedArr, failedArr }
+    },
+    removeEditingNode (context) {
+      const clone = context.state.appConfig.configs.slice()
+      const index = clone.findIndex(
+        config => config.id === context.state.editingConfig.id
+      )
+      clone.splice(index, 1)
+      context.dispatch('updateConfigs', clone)
+      const next = clone[index]
+      const prev = clone[index - 1]
+      let id = next ? next.id : prev ? prev.id : ''
+      context.commit('setSelectedConfigId', id)
+    },
+    renameEditingGroup (context) {
+      if (context.state.editingGroup.editingTitle !== context.state.editingGroup.title) {
+        const copy = context.state.appConfig.configs.slice()
+        let searchTitle = context.state.editingGroup.title === '$ungrouped$' ? '' : context.state.editingGroup.title
+        for (let index = 0; index < copy.length; index++) {
+          const config = copy[index]
+          if (config.group === searchTitle) {
+            copy.splice(index, 1, Object.assign({}, clone(config, true), { group: context.state.editingGroup.editingTitle }))
+          }
+        }
+        context.dispatch('updateConfigs', copy)
+        context.commit('updateEditingGroup', { updated: true, title: context.state.editingGroup.editingTitle })
+      }
+    },
+    saveEditingNode (context) {
+      if (context.getters.isEditingConfigUpdated) {
+        const copy = context.state.appConfig.configs.slice()
+        const index = copy.findIndex(
+          config => config.id === context.state.editingConfig.id
+        )
+        if (index >= 0) {
+          copy.splice(index, 1)
+        }
+        copy.splice(index, 0, clone(context.state.editingConfig))
+        context.commit('updateEditingBak')
+        context.dispatch('updateConfigs', copy)
+      }
+    },
+    removeEditingGroup (context) {
+      let title = context.state.editingGroup.title
+      const clone = context.state.appConfig.configs.slice()
+      if (title === '$ungrouped$') {
+        title = ''
+      }
+      context.dispatch('updateConfigs', clone.filter(config => config.group !== title))
+      context.commit('setSelectedConfigId', (context.state.selectedConfig && context.state.selectedConfig.id) || '')
+      context.commit('updateEditingGroup', { show: false, title: '' })
+    },
+    newConfig (context) {
+      let newConfig = defaultSSRConfig(context.getters.selectedConfigNode)
+      const clone = context.state.appConfig.configs.slice()
+      clone.push(newConfig)
+      context.dispatch('updateConfigs', clone)
+      context.dispatch('setSelected', newConfig.id)
+      context.commit('updateEditingGroup', { show: false, title: '' })
+    },
+    setSelected (context, id) {
+      context.commit('setSelectedConfigId', id)
+      context.commit('setEditingConfig', context.getters.selectedConfigNode)
+    },
+    newSubscription (context) {
+      context.commit('updateView', { page: 'Options', tab: 'subscribes', active: true })
     }
   },
   getters: {
-    selectedConfig: state => state.appConfig.configs[state.appConfig.index],
-    isEditingConfigUpdated: state => !isConfigEqual(state.editingConfigBak, state.editingConfig)
+    activatedConfig: (state) => state.appConfig.configs[state.appConfig.index],
+    isEditingConfigUpdated: (state) => !isConfigEqual(state.editingConfig, state.editingConfigBak),
+    configs: (state) => {
+      if (state.appConfig && state.appConfig.configs && state.appConfig.configs.length) {
+        return state.appConfig.configs.map(config => {
+          return cloneConfig(config)
+        })
+      }
+      return []
+    },
+    selectedConfigNode (state, getters) {
+      if (state.selection.selectedConfigId) {
+        return getters.configs.find(config => config.id === state.selection.selectedConfigId)
+      }
+      return defaultSSRConfig()
+    },
+    buttonState (state) {
+      let deleteEnabled = state.selection.selectedConfigId !== '' || (state.editingGroup && state.editingGroup.title && state.editingGroup.show)
+
+      return !deleteEnabled
+    }
   }
 })

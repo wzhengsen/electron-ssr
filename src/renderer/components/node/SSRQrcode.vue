@@ -1,41 +1,37 @@
 <template>
   <!-- 二维码 -->
   <div class="app-qrcode flex flex-column flex-ai-center flex-jc-center pos-r">
-    <p class="tip mb-1">截图请注意打码</p>
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="280" height="280"
+    <p class="tip mb-1">{{$t('UI_HIDE_INFO')}}</p>
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="300" height="300"
       :view-box.camel="`0 0 ${editingConfigQR.size} ${editingConfigQR.size}`"
       @contextmenu="onRightClick" ref="svg">
-      <path :d="editingConfigQR.path"></path>
+      <path :d="editingConfigQR.path"/>
     </svg>
     <ul v-if="contextmenu.show" class="contextmenu" v-clickoutside="clickoutside"
       :style="{left:contextmenu.left,right:contextmenu.right,top:contextmenu.top}">
-      <li @click="copyImage">复制图像</li>
-      <li @click="copyLink">复制链接</li>
+      <li @click="copyImage">{{$t('UI_COPY_IMAGE')}}</li>
+      <li @click="copyLink">{{$t('UI_COPY_LINK')}}</li>
     </ul>
     <div class="link flex flex-ai-center mt-1">
-      <i-checkbox v-model="isSSR">SSR链接</i-checkbox>
+      <i-checkbox v-model="isSSR">SS(R)</i-checkbox>
       <i-input class="flex-1" ref="input" :value="editingConfigLink" readonly style="width:auto">
         <template slot="append">
           <i-tooltip :content="copyTooltip" placement="top-end" :delay="300">
             <i-button icon="ios-copy" @click="copyLink"
-              @mouseover.native="onCopyOver" @mouseout.native="onCopyOut"></i-button>
+                      @mouseover.native="onCopyOver" @mouseout.native="onCopyOut"/>
           </i-tooltip>
         </template>
       </i-input>
-    </div>
-    <div class="flex mt-2 flex-jc-center">
-      <i-button class="w-6r" type="default" @click="cancel">取消</i-button>
-      <i-button class="w-6r ml-3" type="primary" @click="save">确定</i-button>
     </div>
   </div>
 </template>
 <script>
 import { clipboard, nativeImage } from 'electron'
 import qr from 'qr-image'
-import clickoutside from 'erguotou-iview/src/directives/clickoutside'
+import clickoutside from 'iview/src/directives/clickoutside'
 import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
-import { hideWindow } from '../../ipc'
-import { clone, merge } from '../../../shared/utils'
+import { getSSLink, getSSRLink } from '@/shared/ssr'
+import { merge } from '@/shared/utils'
 
 const COPY_TOOLTIP = '点击复制链接'
 const COPY_TOOLTIP_COPIED = '链接已复制'
@@ -58,7 +54,7 @@ export default {
     ...mapState(['appConfig', 'editingConfig']),
     ...mapGetters(['isEditingConfigUpdated']),
     editingConfigLink () {
-      return this.isSSR ? this.editingConfig.getSSRLink() : this.editingConfig.getSSLink()
+      return this.isSSR ? getSSRLink(this.editingConfig) : getSSLink(this.editingConfig)
     },
     editingConfigQR () {
       return qr.svgObject(this.editingConfigLink)
@@ -119,27 +115,27 @@ export default {
     },
     clickoutside () {
       this.contextmenu.show = false
-    },
-    cancel () {
-      this.resetState()
-      hideWindow()
-    },
-    save () {
-      if (this.editingConfig.isValid()) {
-        if (this.isEditingConfigUpdated) {
-          const copy = this.appConfig.configs.slice()
-          const index = copy.findIndex(config => config.id === this.editingConfig.id)
-          copy.splice(index, 1)
-          copy.splice(index, 0, clone(this.editingConfig))
-          this.updateEditingBak()
-          this.updateConfigs(copy)
-        } else {
-          hideWindow()
-        }
-      } else {
-        window.alert('服务器配置信息不完整')
-      }
     }
+    // cancel () {
+    //   this.resetState()
+    //   hideWindow()
+    // }
+    // save () {
+    //   if (this.editingConfig.isValid()) {
+    //     if (this.isEditingConfigUpdated) {
+    //       const copy = this.appConfig.configs.slice()
+    //       const index = copy.findIndex(config => config.id === this.editingConfig.id)
+    //       copy.splice(index, 1)
+    //       copy.splice(index, 0, clone(this.editingConfig))
+    //       this.updateEditingBak()
+    //       this.updateConfigs(copy)
+    //     } else {
+    //       hideWindow()
+    //     }
+    //   } else {
+    //     window.alert('服务器配置信息不完整')
+    //   }
+    // }
   }
 }
 </script>

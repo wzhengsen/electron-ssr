@@ -3,65 +3,75 @@
  */
 import http from 'http'
 import httpShutdown from 'http-shutdown'
-import { parse } from 'url'
 import { dialog } from 'electron'
-import { readFile, writeFile, pathExists } from 'fs-extra'
+import { readFile, writeFile, pathExists, createReadStream } from 'fs-extra'
 import logger from './logger'
 import { request } from '../shared/utils'
-import bootstrapPromise, { pacPath } from './bootstrap'
+import bootstrapPromise, { pacPath, pacRawPath } from './bootstrap'
+import { showNotification } from './notification'
 import { currentConfig, appConfig$ } from './data'
-import { isHostPortValid } from './port'
-let pacContent
+import { ensureHostPortValid } from './port'
+import * as i18n from './locales'
+const $t = i18n.default
 let pacServer
 
 httpShutdown.extend()
-
-/**
- * 下载pac文件
- */
+const replacePac = (str) => str.replace(/__PROXY__/g,
+  `SOCKS5 127.0.0.1:${currentConfig.localPort}; SOCKS 127.0.0.1:${currentConfig.localPort}; PROXY 127.0.0.1:${currentConfig.localPort}; PROXY 127.0.0.1:${currentConfig.httpProxyPort}; DIRECT`)
 export async function downloadPac (force = false) {
   await bootstrapPromise
-  const pacExisted = await pathExists(pacPath)
+  const pacExisted = await pathExists(pacRawPath)
+  logger.debug(`${pacRawPath} pacExisted: ${pacExisted}`)
+  let pac = ''
   if (force || !pacExisted) {
     logger.debug('start download pac')
-    const pac = await request('https://raw.githubusercontent.com/shadowsocksrr/pac.txt/pac/pac.txt')
-    pacContent = pac
-    return await writeFile(pacPath, pac)
+    pac = await request('https://cdn.jsdelivr.net/gh/shadowsocksrr/pac.txt@pac/pac.txt')
+    await writeFile(pacRawPath, pac) // save raw pac file
+  } else {
+    // always gen pac from raw
+    pac = (await readFile(pacRawPath)).toString()
   }
+  pac = replacePac(pac)
+  await writeFile(pacPath, pac)
 }
-
-function readPac () {
-  return new Promise(resolve => {
-    if (!pacContent) {
-      resolve(readFile(pacPath))
-    } else {
-      resolve(pacContent)
-    }
-  })
+async function updatePacProxy () {
+  let content = (await readFile(pacRawPath)).toString()
+  content = replacePac(content)
+  await writeFile(pacPath, content)
 }
-
+let ensurePacPromise = null
+let notified = false
 /**
  * pac server
  */
-export async function serverPac (appConfig, isProxyStarted) {
+async function serverPac (appConfig, isProxyStarted) {
   if (isProxyStarted) {
     const host = currentConfig.shareOverLan ? '0.0.0.0' : '127.0.0.1'
     const port = appConfig.pacPort !== undefined ? appConfig.pacPort : currentConfig.pacPort || 1240
-    isHostPortValid(host, port).then(() => {
-      pacServer = http.createServer((req, res) => {
-        if (parse(req.url).pathname === '/proxy.pac') {
-          downloadPac().then(() => {
-            return readPac()
-          }).then(buffer => buffer.toString()).then(text => {
+    try {
+      await ensureHostPortValid(host, port)
+      pacServer = http.createServer(async (req, res) => {
+        if (req.url && req.url.startsWith('/proxy.pac')) {
+          if (ensurePacPromise == null) {
+            ensurePacPromise = downloadPac()
+          }
+          ensurePacPromise.then(() => {
             res.writeHead(200, {
               'Content-Type': 'application/x-ns-proxy-autoconfig',
               'Connection': 'close'
             })
-            res.write(text.replace(/__PROXY__/g, `SOCKS5 127.0.0.1:${appConfig.localPort}; SOCKS 127.0.0.1:${appConfig.localPort}; PROXY 127.0.0.1:${appConfig.localPort}; ${appConfig.httpProxyEnable ? 'PROXY 127.0.0.1:' + appConfig.httpProxyPort + ';' : ''} DIRECT`))
-            res.end()
+            createReadStream(pacPath).pipe(res)
+          }).catch((error) => {
+            logger.error(`Failed to download pac.txt`)
+            logger.error(error)
+            if (!notified) {
+              notified = true
+              showNotification($t('NOTI_PAC_UPDATE_FAILED'))
+            }
           })
         } else {
           res.writeHead(200)
+          res.write('Go /proxy.pac')
           res.end()
         }
       }).withShutdown().listen(port, host)
@@ -72,13 +82,11 @@ export async function serverPac (appConfig, isProxyStarted) {
           logger.error(`pac server error: ${err}`)
           pacServer.shutdown()
         })
-    }).catch(() => {
-      dialog.showMessageBox({
-        type: 'warning',
-        title: '警告',
-        message: `PAC端口 ${port} 被占用`
-      })
-    })
+    } catch (err) {
+      logger.error('PAC Server Port Check failed, with error: ')
+      logger.error(err)
+      dialog.showErrorBox($t('NOTI_PORT_TAKEN', { 'port': port }), $t('NOTI_CHECK_PORT'))
+    }
   }
 }
 
@@ -91,7 +99,7 @@ export async function stopPacServer () {
       pacServer.shutdown(err => {
         if (err) {
           logger.warn(`close pac server error: ${err}`)
-          reject()
+          reject(new Error(`close pac server error: ${err}`))
         } else {
           logger.info('pac server closed.')
           resolve()
@@ -113,6 +121,10 @@ appConfig$.subscribe(data => {
       stopPacServer().then(() => {
         serverPac(appConfig, isProxyStarted)
       })
+    }
+    if (['localPort', 'httpProxyPort'].some(key => changed.indexOf(key) > -1)) {
+      console.log('Ported UPdated')
+      updatePacProxy()
     }
   }
 })

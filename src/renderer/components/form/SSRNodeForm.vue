@@ -1,43 +1,43 @@
 <template>
-  <i-form class="panel-form" ref="form" :model="editingConfig" :rules="rules" :label-width="88">
-    <i-form-item label="服务器地址" prop="server">
+  <i-form class="panel-form" ref="form" :model="editingConfig" :rules="rules" :label-width="100">
+    <i-form-item :label="$t('SSR_SERVER_PATH')" prop="server">
       <i-input type="text" :value="editingConfig.server" @input="v=>onInput('server', v)"/>
     </i-form-item>
-    <i-form-item label="服务器端口" prop="server_port">
+    <i-form-item :label="$t('SSR_SERVER_PORT')" prop="server_port">
       <i-input-number :value="editingConfig.server_port" @input="v=>onInput('server_port', v)" :min="0" :max="65535"/>
     </i-form-item>
     <i-form-item prop="password">
       <span slot="label">
-        <i-checkbox v-model="passwordVisiable" style="margin-right:0">密码</i-checkbox>
+        <i-checkbox v-model="passwordVisiable" style="margin-right:0">{{$t('SSR_PASSWORD')}}</i-checkbox>
       </span>
       <i-input :type="passwordVisiable ? 'text' : 'password'" :value="editingConfig.password" @input="v=>onInput('password', v)"/>
     </i-form-item>
-    <i-form-item label="加密方式" prop="method">
+    <i-form-item :label="$t('SSR_ENCRYPT_METHOD')" prop="method">
       <i-select :value="editingConfig.method" @input="v=>onInput('method', v)">
         <i-option v-for="method in methods" :key="method" :value="method">{{method}}</i-option>
       </i-select>
     </i-form-item>
-    <i-form-item label="协议" prop="protocol">
+    <i-form-item :label="$t('SSR_PROTO')" prop="protocol">
       <i-select :value="editingConfig.protocol" @input="v=>onInput('protocol', v)">
         <i-option v-for="protocol in protocols" :key="protocol" :value="protocol">{{protocol}}</i-option>
       </i-select>
     </i-form-item>
-    <i-form-item label="协议参数">
+    <i-form-item :label="$t('SSR_PROTO_PARAM')">
       <i-input :value="editingConfig.protocolparam" @input="v=>onInput('protocolparam', v)"/>
     </i-form-item>
-    <i-form-item label="混淆" prop="obfs">
+    <i-form-item :label="$t('SSR_OBFS')" prop="obfs">
       <i-select :value="editingConfig.obfs" @input="v=>onInput('obfs', v)" @on-change="onObfsChange">
         <i-option v-for="obfs in obfses" :key="obfs" :value="obfs">{{obfs}}</i-option>
       </i-select>
     </i-form-item>
-    <i-form-item label="混淆参数">
+    <i-form-item :label="$t('SSR_OBFS_PARAM')">
       <i-input :disabled="editingConfig.obfs==='plain'" :value="editingConfig.obfsparam" @input="v=>onInput('obfsparam', v)"/>
     </i-form-item>
-    <i-form-item label="备注">
+    <i-form-item :label="$t('SSR_NOTE')">
       <i-input :value="editingConfig.remarks" @input="v=>onInput('remarks', v)"/>
     </i-form-item>
-    <i-form-item label="分组">
-      <i-auto-complete :data="filteredGroups" clearable placeholder="未分组" placement="top"
+    <i-form-item :label="$t('SSR_GROUP')">
+      <i-auto-complete :data="filteredGroups" clearable :placeholder="$t('SSR_UNGROUPED')" placement="top"
         :value="editingConfig.group" @input="v=>onInput('group', v)"/>
     </i-form-item>
   </i-form>

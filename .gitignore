@@ -131,3 +131,10 @@ typings/
 # next.js build output
 .next
 
+dist_electron
+.electron-vue-rm
+
+src/lib/*
+!src/lib/mac_service.sh
+!src/lib/proxy_conf_helper
+!src/lib/LICENSE

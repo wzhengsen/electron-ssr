@@ -1,30 +1,30 @@
 <template>
   <app-view name="feature">
-    <h1>Electron SSR客户端</h1>
+    <h1>{{$t('UI_ELECTRON_SSR_NAME')}}</h1>
     <i-row type="flex" :gutter="24" class="mt-64">
       <i-col class="col flex flex-column flex-ai-center flex-jc-center">
         <icon-cross/>
-        <b class="font-18 my-1">跨平台</b>
-        <p>支持Windows、MacOs、Linux系统</p>
+        <b class="font-18 my-1">{{$t('UI_FEATURE_CROSS_PLATFORM')}}</b>
+        <p>{{$t('UI_FEATURE_CP_DETAIL')}}</p>
       </i-col>
       <i-col class="col flex flex-column flex-ai-center flex-jc-center">
         <icon-functions/>
-        <b class="font-18 my-1">功能齐全</b>
-        <p>支持多种实用功能</p>
+        <b class="font-18 my-1">{{$t('UI_FEATURE_FULL_FEATURES')}}</b>
+        <p>{{$t('UI_FEATURE_FF_DETAIL')}}</p>
       </i-col>
       <i-col class="col flex flex-column flex-ai-center flex-jc-center">
         <icon-open/>
-        <b class="font-18 my-1">开源</b>
-        <p>ssr和electron-ssr源代码均开放</p>
+        <b class="font-18 my-1">{{$t('UI_FEATURE_OPEN_SOURCE')}}</b>
+        <p>{{$t('UI_FEATURE_OS_DETAIL')}}</p>
       </i-col>
     </i-row>
     <div class="flex flex-ai-center mt-64">
-      <i-checkbox v-model="autoDownload" @on-change="updateAutoDownload">自动下载SSR</i-checkbox>
-      <i-tooltip placement="top" content="勾选上后将自动下载python ssr" style="margin-top:2px">
-        <i-icon color="#495060" type="help-circled"></i-icon>
+      <i-checkbox v-model="autoDownload" @on-change="updateAutoDownload">{{$t('UI_AUTO_DOWNLOAD_SSR')}}</i-checkbox>
+      <i-tooltip placement="top" :content="$t('UI_AUTO_DOWNLOAD_SSR_IF_CHECKED')">
+        <i-icon color="#495060" type="ios-help-circle-outline" style="vertical-align:text-bottom;"></i-icon>
       </i-tooltip>
     </div>
-    <i-button type="primary" class="w-6r mt-1" @click="done">知道了</i-button>
+    <i-button type="primary" class="w-6r mt-1" @click="done">{{$t('UI_UNDERSTAND')}}</i-button>
   </app-view>
 </template>
 <script>

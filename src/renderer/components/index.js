@@ -1,6 +1,4 @@
 import Vue from 'vue'
-import { Row, Col } from 'erguotou-iview/src/components/grid'
-import { Select, Option, OptionGroup } from 'erguotou-iview/src/components/select'
 import AppView from './AppView'
 import ExternalLink from './ExternalLink'
 
@@ -21,8 +19,13 @@ import {
   Tree,
   Tooltip,
   Poptip,
-  Spin
-} from 'erguotou-iview'
+  Spin,
+  Row,
+  Col,
+  Select,
+  Option,
+  OptionGroup
+} from 'iview'
 
 const components = {
   Alert,

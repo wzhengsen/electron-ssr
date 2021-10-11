@@ -1,53 +1,59 @@
 # Commented sections below can be used to run tests on the CI server
 # https://simulatedgreg.gitbooks.io/electron-vue/content/en/testing.html#on-the-subject-of-ci-testing
-on:
-  condition: "$TRAVIS_COMMIT_MESSAGE =~ ^trigger ci$"
-osx_image: xcode8.3
-sudo: required
-dist: trusty
-language: c
 matrix:
   include:
   - os: osx
+    osx_image: xcode10.2
+    language: node_js
+    node_js: "10"
+    env:
+      - ELECTRON_CACHE=$HOME/.cache/electron
+      - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
   - os: linux
-    env: CC=clang CXX=clang++ npm_config_clang=1
-    compiler: clang
+    language: node_js
+    node_js: "10"
+    services:
+      - xvfb
+    addons:
+      apt:
+        sources:
+          - sourceline: 'ppa:ubuntu-toolchain-r/test'
+        packages:
+          - libgnome-keyring-dev
+          - rpm
+          - bsdtar
+          - g++-8
+          - g++-multilib
+          - icnsutils
+          - graphicsmagick
+          - xz-utils
+          - xorriso
+          - rpm
 cache:
+  yarn: true
   directories:
-  - node_modules
-  - "$HOME/.electron"
-  - "$HOME/.cache"
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - graphicsmagick
-    - libgnome-keyring-dev
-    - icnsutils
-    - xz-utils
-    - rpm
-    - bsdtar
-    #- xvfb
+    - node_modules
+    - $(npm config get prefix)/lib/node_modules
+    - $HOME/.cache/electron
+    - $HOME/.cache/electron-builder
 before_install:
-# - mkdir -p /tmp/git-lfs && curl -L https://github.com/github/git-lfs/releases/download/v1.2.1/git-lfs-$([
-#   "$TRAVIS_OS_NAME" == "linux" ] && echo "linux" || echo "darwin")-amd64-1.2.1.tar.gz
-#   | tar -xz -C /tmp/git-lfs --strip-components 1 && /tmp/git-lfs/git-lfs pull
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install git-lfs; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install --no-install-recommends -y icnsutils graphicsmagick xz-utils; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX="g++-8"; fi
 install:
-#- export DISPLAY=':99.0'
-#- Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-- nvm install 8
-- curl -o- -L https://yarnpkg.com/install.sh | bash
-- source ~/.bashrc
-# - npm install -g xvfb-maybe
-- yarn
-script:
-#- xvfb-maybe node_modules/.bin/karma start test/unit/karma.conf.js
-- yarn run build
-branches:
-  only:
-  - master
+  - yarn --ignore-engines
+  - |
+    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+      /sbin/start-stop-daemon \
+      --start \
+      --quiet \
+      --pidfile /tmp/custom_xvfb_99.pid \
+      --make-pidfile \
+      --background \
+      --exec /usr/bin/Xvfb \
+      -- :99 -ac -screen 0 1280x1024x16
+    else
+      :
+    fi
 
-# if: tag IS present
+script:
+  - yarn fetch-dep && yarn run electron:build
+if: tag IS blank

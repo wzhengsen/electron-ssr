@@ -1,10 +1,9 @@
 import { app, BrowserWindow } from 'electron'
 import { isQuiting } from './data'
 import logger from './logger'
-
-const winURL = process.env.NODE_ENV === 'development'
-  ? `http://localhost:9080`
-  : `file://${__dirname}/index.html`
+import {
+  createProtocol
+} from 'vue-cli-plugin-electron-builder/lib'
 
 let mainWindow
 let readyPromise
@@ -12,27 +11,35 @@ let readyPromise
  * 创建主视图
  */
 export function createWindow () {
-  if (process.platform === 'darwin') {
-    app.dock.hide()
-  }
   mainWindow = new BrowserWindow({
-    height: 440,
+    height: 500,
     width: 800,
     center: true,
     resizable: false,
     minimizable: false,
     maximizable: false,
     show: false,
-    webPreferences: { webSecurity: process.env.NODE_ENV !== 'development', nodeIntegration: true }
+    webPreferences: { webSecurity: process.env.NODE_ENV === 'production', nodeIntegration: true }
   })
-  mainWindow.setMenu(null)
-  mainWindow.loadURL(winURL)
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    // Load the url of the dev server if in development mode
+    mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+    if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
+  } else {
+    createProtocol('app')
+    // Load the index.html when not in development
+    mainWindow.loadURL(`file://${__dirname}/index.html`)
+  }
   // hide to tray when window closed
   mainWindow.on('close', (e) => {
     // 当前不是退出APP的时候才去隐藏窗口
+    // hide the windows if not quiting
     if (!isQuiting()) {
       e.preventDefault()
       mainWindow.hide()
+      if (process.platform === 'darwin') {
+        app.dock.hide()
+      }
     }
   })
 
@@ -58,6 +65,9 @@ export function getWindow () {
 export function showWindow () {
   if (mainWindow) {
     mainWindow.show()
+    if (process.platform === 'darwin') {
+      app.dock.show()
+    }
   }
 }
 

@@ -42,3 +42,7 @@ export const EVENT_RX_SYNC_MAIN = 'rx.sync.main'
 
 // 由`ipc-renderer`发出 同步`rx`数据
 export const EVENT_RX_SYNC_RENDERER = 'rx.sync.renderer'
+
+export const EVENT_CONFIG_CREATE = 'config.new'
+export const EVENT_SUBSCRIBE_NEW = 'subscribe.new'
+export const EVENT_SUBSCRIBE_SAVE_TIME = 'subscribe.update.time'

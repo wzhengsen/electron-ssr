@@ -1,22 +1,22 @@
 <template>
   <app-view name="options" class="bg-white">
     <i-tabs class="flex-1 w-100" :value="view.tab" @on-click="name => updateView({ tab: name })">
-      <i-tab-pane label="通用设置" name="common">
+      <i-tab-pane :label="$t('UI_SETTING_COMMON')" name="common">
         <option-common></option-common>
       </i-tab-pane>
-      <i-tab-pane label="SSR设置" name="ssr">
+      <i-tab-pane :label="$t('UI_SETTING_SSR')" name="ssr">
         <option-ssr></option-ssr>
       </i-tab-pane>
-      <i-tab-pane label="订阅管理" name="subscribes">
+      <i-tab-pane :label="$t('UI_SETTING_SUBSCRIPTION')" name="subscribes">
         <option-subscribe></option-subscribe>
       </i-tab-pane>
-      <i-tab-pane label="快捷键管理" name="shortcuts">
+      <i-tab-pane :label="$t('UI_SETTING_SHORTCUT')" name="shortcuts">
         <option-shortcut></option-shortcut>
       </i-tab-pane>
     </i-tabs>
     <div class="w-100 flex flex-jc-end px-2 py-1 border-1px-t">
-      <i-button class="w-6r mr-2" @click="$emit('back')">返回</i-button>
-      <i-button class="w-6r" type="primary" @click="done">完成</i-button>
+      <i-button class="w-6r mr-2" @click="$emit('back')">{{$t('UI_BACK')}}</i-button>
+      <i-button class="w-6r" type="primary" @click="done">{{$t('UI_DONE')}}</i-button>
     </div>
   </app-view>
 </template>

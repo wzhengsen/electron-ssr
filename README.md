@@ -59,8 +59,6 @@ The shortcuts were originally added to solve the problem that some Linux distrib
 - `CommandOrControl+Shift+W` show/hide main window
 - `not assigned` switch system proxy mode
 
-### In-app shortcuts
-- `CommandOrControl+Shift+B` show/hide the menu bar, only available on Linux
 
 ## Known Bugs
 
@@ -91,21 +89,18 @@ Additionally, if you find a bug please describe your environment in the issue. T
 
 Feel free to propose a new revision.
 
-## Donate
-
-[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/erguotou520)
 
 ## Build
-
+> You might want to customize the build target in `vue.config.js`
 ``` bash
 # or npm install
 yarn
 
 # run in development mode
-npm run dev
+npm run electron:dev
 
-# run in development mode
-npm run build
+# build
+npm run electron:build
 
 # run the unit tests
 npm run mocha
@@ -128,4 +123,3 @@ Please check the [release notes](../../releases/latest).
 
 ---
 
-This project was generated with [electron-vue](https://github.com/SimulatedGREG/electron-vue)@[1c165f7](https://github.com/SimulatedGREG/electron-vue/tree/1c165f7c5e56edaf48be0fbb70838a1af26bb015) using [vue-cli](https://github.com/vuejs/vue-cli). Documentation about the original structure can be found [here](https://simulatedgreg.gitbooks.io/electron-vue/content/index.html).

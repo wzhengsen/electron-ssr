@@ -1,19 +1,18 @@
 import Vue from 'vue'
 import './components'
-import './ipc'
+import { getInitConfig, register } from './ipc'
 import store from './store'
 import App from './App'
-import { getInitConfig } from './ipc'
-import { init as initShortcut } from './shortcut'
-
+import i18n from './i18n'
+register()
 Vue.config.productionTip = false
 
 // 启动应用时获取初始化数据
-getInitConfig()
-initShortcut(store.state.appConfig)
-
-/* eslint-disable no-new */
-new Vue({
-  store,
-  render: h => h(App)
-}).$mount('#app')
+getInitConfig().then(() => {
+  /* eslint-disable no-new */
+  new Vue({
+    store,
+    i18n,
+    render: h => h(App)
+  }).$mount('#app')
+})

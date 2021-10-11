@@ -1,9 +1,8 @@
 import { app, powerMonitor } from 'electron'
 import AutoLaunch from 'auto-launch'
-import bootstrap from './bootstrap'
+import bootstrapPromise from './bootstrap'
 import { isQuiting, appConfig$, currentConfig, addConfigs } from './data'
 import { destroyTray } from './tray'
-import { checkUpdate } from './updater'
 import './menu'
 import './ipc'
 import { stopPacServer } from './pac'
@@ -16,14 +15,15 @@ import logger from './logger'
 import { clearShortcuts } from './shortcut'
 import { loadConfigsFromString } from '../shared/ssr'
 import { isMac, isWin } from '../shared/env'
+import {
+  installVueDevtools
+} from 'vue-cli-plugin-electron-builder/lib'
 const isPrimaryInstance = app.requestSingleInstanceLock()
-
+const isDevelopment = process.env.NODE_ENV !== 'production' && !process.env.IS_TEST
 if (!isPrimaryInstance) {
-  // cannot find module '../dialog'
-  // https://github.com/electron/electron/issues/8862#issuecomment-294303518
   app.exit()
 } else {
-  app.on('second-instance', (event, argv) => {
+  app.on('second-instance', (_, argv) => {
     showWindow()
     // 如果是通过链接打开的应用，则添加记录
     if (argv[1]) {
@@ -33,50 +33,47 @@ if (!isPrimaryInstance) {
       }
     }
   })
-
-  bootstrap.then(() => {
+  bootstrapPromise.then(async () => {
+    if (isDevelopment) {
+      console.log('Ensure Vue Devtools has been installed')
+      installVueDevtools().catch(err => {
+        logger.debug('Unable to install Vue Devtools', err)
+      })
+    }
     createWindow()
-    if (isWin || isMac) {
-      app.setAsDefaultProtocolClient('ssr')
-      app.setAsDefaultProtocolClient('ss')
-    }
-
-    if (process.env.NODE_ENV !== 'development') {
-      checkUpdate()
-    }
-
-    // 开机自启动配置
+    // load manually when window created
+    appConfig$.init()
     const AutoLauncher = new AutoLaunch({
-      name: 'ShadowsocksR Client',
+      name: 'Electron SSR',
       isHidden: true,
       mac: {
         useLaunchAgent: true
       }
     })
-
-    appConfig$.subscribe(data => {
+    appConfig$.subscribe(async (data) => {
       const [appConfig, changed] = data
-      if (!changed.length) {
+      if (changed.length === 0) {
+        // if there is no config, or ssrPath is not set, show window
         // 初始化时没有配置则打开页面，有配置则不显示主页面
-        if (!appConfig.configs.length || !appConfig.ssrPath) {
+        if (!appConfig.hideWindow || appConfig.configs.length === 0 || !appConfig.ssrPath) {
           showWindow()
         }
-      }
-      if (!changed.length || changed.indexOf('autoLaunch') > -1) {
-        // 初始化或者选项变更时
-        AutoLauncher.isEnabled().then(enabled => {
-          // 状态不相同时
+      } else if (changed.indexOf('autoLaunch') > -1) {
+        try {
+          let enabled = await AutoLauncher.isEnabled()
           if (appConfig.autoLaunch !== enabled) {
-            return AutoLauncher[appConfig.autoLaunch ? 'enable' : 'disable']().catch(() => {
-              logger.error(`${appConfig.autoLaunch ? '执行' : '取消'}开机自启动失败`)
-            })
+            await AutoLauncher[appConfig.autoLaunch ? 'enable' : 'disable']()
           }
-        }).catch(() => {
-          logger.error('获取开机自启状态失败')
-        })
+        } catch (error) {
+          logger.error('Failed to process auto start')
+          logger.error(error)
+        }
       }
     })
-
+    if (isWin || isMac) {
+      app.setAsDefaultProtocolClient('ssr')
+      app.setAsDefaultProtocolClient('ss')
+    }
     // 电源状态检测
     powerMonitor.on('suspend', () => {
       // 系统挂起时
@@ -91,8 +88,10 @@ if (!isPrimaryInstance) {
       // startProxy()
       startTask(currentConfig)
     })
+  }).catch(err => {
+    logger.error('Failed at bootstrapPromise')
+    logger.error(err)
   })
-
   app.on('window-all-closed', () => {
     logger.debug('window-all-closed')
     if (process.platform !== 'darwin') {
@@ -103,19 +102,29 @@ if (!isPrimaryInstance) {
   // 由main进程发起的退出
   app.on('before-quit', () => { isQuiting(true) })
 
-  app.on('will-quit', e => {
+  app.on('will-quit', async (e) => {
     logger.debug('will-quit')
     e.preventDefault()
-    stopTask()
-    setProxyToNone()
-    destroyTray()
-    destroyWindow()
-    stopHttpProxyServer()
-    stopPacServer()
-    clearShortcuts()
-    stopCommand(true).then(() => {
-      app.exit(0)
+    const reflect = p => p.then(() => ({ status: 'fulfilled' }),
+      e => ({ e, status: 'rejected' }))
+    const asyncTask = [
+      setProxyToNone(),
+      stopHttpProxyServer(),
+      stopPacServer(),
+      stopCommand(true)
+    ]
+    await Promise.all(asyncTask.map(reflect)).then((results) => {
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          logger.error(result.e)
+        }
+      }
     })
+    stopTask()
+    destroyTray()
+    clearShortcuts()
+    destroyWindow()
+    app.exit(0)
   })
 
   app.on('activate', () => {
