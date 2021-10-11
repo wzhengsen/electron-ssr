@@ -41,7 +41,7 @@ ipcMain.on(events.EVENT_APP_HIDE_WINDOW, () => {
   // 下载ssr
   logger.info('start download ssrr')
   // 自动下载ssr项目
-  downloadGitRepo(`shadowsocksrr/shadowsocksr#akkariiin/master`, defaultSSRDownloadDir, err => {
+  downloadGitRepo(`wzhengsen/shadowsocksr#wzhengsen/main`, defaultSSRDownloadDir, err => {
     logger[err ? 'error' : 'info'](`ssrr download ${err ? 'error' : 'success'}`)
     e.sender.send(events.EVENT_SSR_DOWNLOAD_MAIN, err ? err.message : null)
   })
